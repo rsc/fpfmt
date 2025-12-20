@@ -1,0 +1,21 @@
+ALL=\
+	ruler1.export\
+	ruler2.export\
+	ruler-trimzero.export\
+	ruler-scale.export\
+	ruler-skew.export\
+	ruler-pi.export\
+	ruler-many.export\
+
+blog=../../../blog
+
+rebuild:V: $ALL
+	go -C $blog run ./build post/fp
+
+ruler%.svg:D: ruler%.ivy ruler.ivy
+	ivy ruler$stem.ivy >ruler$stem.svg
+
+ruler%.export:V: $blog/_static/fpfmt-ruler$stem.svg
+
+$blog/_static/fpfmt-ruler$stem.svg: ruler$stem.svg
+	cp ruler$stem.svg $blog/_static/fpfmt-ruler$stem.svg

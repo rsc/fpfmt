@@ -1,0 +1,13 @@
+)get 'ruler.ivy'
+
+span = -0.1 1.1
+Ruler (5 5 60 205) (2 0) span
+Ruler (NextRect 0) (2 -2) span
+Ruler (NextRect 0) (2 -4) span
+Ruler (NextRect 0) (2 -6) span
+RMinX = RMaxX - 40
+Ruler (NextRect 0) (10 -2) span
+Ruler (NextRect 0) (10 -1) span
+Ruler (NextRect 0) (10 0) span
+
+SVG (RMaxX+5) (RMaxY+25) style defs body

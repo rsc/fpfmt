@@ -1,0 +1,10 @@
+)get 'ruler.ivy'
+
+span = 995500000 1005000000
+Ruler (5 5 75 185) (2 20) span
+Ruler (NextRect 0) (2 18) span
+Ruler (NextRect 0) (2 16) span
+Ruler (NextRect 0) (10 5) span
+Ruler (NextRect 0) (10 6) span
+
+SVG (RMaxX+5) (RMaxY+25) style defs body

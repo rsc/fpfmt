@@ -1,0 +1,24 @@
+)get 'ruler.ivy'
+
+center = 2**89
+delta = 2**37
+wid = 3/2 * delta
+span = (center - wid) (center + wid)
+
+Ruler (5 5 180 165) (2 37) span
+
+rlo rhi = (center-(1/4)*delta) (center+(1/2)*delta)
+body = body, Rect 'range2' (RMaxX+1) (f2y rhi) (RMaxX+10) (f2y rlo)
+
+fmin=center-delta/2
+body = body, Text 'tick2' (RMaxX-12) (float 0.5+(f2y fmin)) '0xfffffffffffff½'
+body = body, Line 'mtick' (RMaxX-10) (f2y fmin) (RMaxX) (f2y fmin)
+
+fmin=center-delta/4
+body = body, Line 'dotted' (float RMaxX-9.5) (f2y rlo) (RMaxX+20) (f2y rlo)
+body = body, Line 'dotted' (float RMaxX-9.5) (f2y rhi) (RMaxX+20) (f2y rhi)
+
+Ruler (NextRect 0) (10 11) span
+
+SVG (RMaxX+5) (RMaxY+25) style defs body
+

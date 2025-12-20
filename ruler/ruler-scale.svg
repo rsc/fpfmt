@@ -1,0 +1,308 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="210" height="250" version="1.1" xmlns="http://www.w3.org/2000/svg"><defs><style type="text/css"><![CDATA[
+text {
+	font-family: 'Minion 3', serif;
+	font-variant-ligatures: none;
+	font-size: 16px;
+}
+text.scale2 {
+	dominant-baseline: hanging;
+	text-anchor: middle;
+}
+text.scale10 {
+	dominant-baseline: hanging;
+	text-anchor: middle;
+}
+tspan.base {
+	font-size: 16px;
+}
+tspan.exp {
+	font-size: 16px;
+}
+text.tick2 {
+	font-family: 'Source Code Pro', monospace;
+	font-size: 14px;
+	text-anchor: end;
+	dominant-baseline: middle;
+}
+text.tick10 {
+	font-size: 16px;
+	text-anchor: start;
+	dominant-baseline: middle;
+}
+line.edge {
+	stroke-width: 2px;
+	stroke: black;
+}
+path.lightedge2, path.lightedge10 {
+	stroke-width: 0.5px;
+	fill: none;
+}
+path.lightedge2 {
+	stroke: #aaffaa;
+}
+path.lightedge10 {
+	stroke: #aaffff;
+}
+line.tick {
+	stroke-width: 0.5px;
+	stroke: black;
+}
+line.mtick {
+	stroke-width: 1px;
+	stroke: black;
+}
+rect.base2 {
+	fill: #e9ffe9;
+}
+rect.base10 {
+	fill: #e9ffff;
+}
+rect.range2 {
+	fill: #e9ffe9;
+}
+line.range2 {
+	stroke: #aaffaa;
+	stroke-width: 1px;
+}
+line.dotted {
+	stroke: #444;
+	stroke-dasharray: 1;
+	stroke-width: 1px;
+}
+]]></style>
+<clipPath id="clip1"><rect x="5" y="5" width="95" height="220" class=""></rect>
+</clipPath>
+<clipPath id="clip2"><rect x="110" y="5" width="95" height="220" class=""></rect>
+</clipPath>
+</defs><rect x="5" y="5" width="95" height="220" class="base2"></rect>
+<g clip-path="url(#clip1)"><text x="88" y="214.5" class="tick2">0x14028</text>
+<text x="88" y="192.5" class="tick2">0x14030</text>
+<text x="88" y="170.5" class="tick2">0x14038</text>
+<text x="88" y="148.5" class="tick2">0x14040</text>
+<text x="88" y="126.5" class="tick2">0x14048</text>
+<text x="88" y="104.5" class="tick2">0x14050</text>
+<text x="88" y="82.5" class="tick2">0x14058</text>
+<text x="88" y="60.5" class="tick2">0x14060</text>
+<text x="88" y="38.5" class="tick2">0x14068</text>
+<text x="88" y="16.5" class="tick2">0x14070</text>
+<line x1="95" y1="227.75" x2="100" y2="227.75" class="tick"></line>
+<line x1="95" y1="225" x2="100" y2="225" class="tick"></line>
+<line x1="95" y1="222.25" x2="100" y2="222.25" class="tick"></line>
+<line x1="95" y1="219.5" x2="100" y2="219.5" class="tick"></line>
+<line x1="95" y1="216.75" x2="100" y2="216.75" class="tick"></line>
+<line x1="95" y1="214" x2="100" y2="214" class="tick"></line>
+<line x1="95" y1="211.25" x2="100" y2="211.25" class="tick"></line>
+<line x1="95" y1="208.5" x2="100" y2="208.5" class="tick"></line>
+<line x1="95" y1="205.75" x2="100" y2="205.75" class="tick"></line>
+<line x1="95" y1="203" x2="100" y2="203" class="tick"></line>
+<line x1="95" y1="200.25" x2="100" y2="200.25" class="tick"></line>
+<line x1="95" y1="197.5" x2="100" y2="197.5" class="tick"></line>
+<line x1="95" y1="194.75" x2="100" y2="194.75" class="tick"></line>
+<line x1="95" y1="192" x2="100" y2="192" class="tick"></line>
+<line x1="95" y1="189.25" x2="100" y2="189.25" class="tick"></line>
+<line x1="95" y1="186.5" x2="100" y2="186.5" class="tick"></line>
+<line x1="95" y1="183.75" x2="100" y2="183.75" class="tick"></line>
+<line x1="95" y1="181" x2="100" y2="181" class="tick"></line>
+<line x1="95" y1="178.25" x2="100" y2="178.25" class="tick"></line>
+<line x1="95" y1="175.5" x2="100" y2="175.5" class="tick"></line>
+<line x1="95" y1="172.75" x2="100" y2="172.75" class="tick"></line>
+<line x1="95" y1="170" x2="100" y2="170" class="tick"></line>
+<line x1="95" y1="167.25" x2="100" y2="167.25" class="tick"></line>
+<line x1="95" y1="164.5" x2="100" y2="164.5" class="tick"></line>
+<line x1="95" y1="161.75" x2="100" y2="161.75" class="tick"></line>
+<line x1="95" y1="159" x2="100" y2="159" class="tick"></line>
+<line x1="95" y1="156.25" x2="100" y2="156.25" class="tick"></line>
+<line x1="95" y1="153.5" x2="100" y2="153.5" class="tick"></line>
+<line x1="95" y1="150.75" x2="100" y2="150.75" class="tick"></line>
+<line x1="95" y1="148" x2="100" y2="148" class="tick"></line>
+<line x1="95" y1="145.25" x2="100" y2="145.25" class="tick"></line>
+<line x1="95" y1="142.5" x2="100" y2="142.5" class="tick"></line>
+<line x1="95" y1="139.75" x2="100" y2="139.75" class="tick"></line>
+<line x1="95" y1="137" x2="100" y2="137" class="tick"></line>
+<line x1="95" y1="134.25" x2="100" y2="134.25" class="tick"></line>
+<line x1="95" y1="131.5" x2="100" y2="131.5" class="tick"></line>
+<line x1="95" y1="128.75" x2="100" y2="128.75" class="tick"></line>
+<line x1="95" y1="126" x2="100" y2="126" class="tick"></line>
+<line x1="95" y1="123.25" x2="100" y2="123.25" class="tick"></line>
+<line x1="95" y1="120.5" x2="100" y2="120.5" class="tick"></line>
+<line x1="95" y1="117.75" x2="100" y2="117.75" class="tick"></line>
+<line x1="95" y1="115" x2="100" y2="115" class="tick"></line>
+<line x1="95" y1="112.25" x2="100" y2="112.25" class="tick"></line>
+<line x1="95" y1="109.5" x2="100" y2="109.5" class="tick"></line>
+<line x1="95" y1="106.75" x2="100" y2="106.75" class="tick"></line>
+<line x1="95" y1="104" x2="100" y2="104" class="tick"></line>
+<line x1="95" y1="101.25" x2="100" y2="101.25" class="tick"></line>
+<line x1="95" y1="98.5" x2="100" y2="98.5" class="tick"></line>
+<line x1="95" y1="95.75" x2="100" y2="95.75" class="tick"></line>
+<line x1="95" y1="93" x2="100" y2="93" class="tick"></line>
+<line x1="95" y1="90.25" x2="100" y2="90.25" class="tick"></line>
+<line x1="95" y1="87.5" x2="100" y2="87.5" class="tick"></line>
+<line x1="95" y1="84.75" x2="100" y2="84.75" class="tick"></line>
+<line x1="95" y1="82" x2="100" y2="82" class="tick"></line>
+<line x1="95" y1="79.25" x2="100" y2="79.25" class="tick"></line>
+<line x1="95" y1="76.5" x2="100" y2="76.5" class="tick"></line>
+<line x1="95" y1="73.75" x2="100" y2="73.75" class="tick"></line>
+<line x1="95" y1="71" x2="100" y2="71" class="tick"></line>
+<line x1="95" y1="68.25" x2="100" y2="68.25" class="tick"></line>
+<line x1="95" y1="65.5" x2="100" y2="65.5" class="tick"></line>
+<line x1="95" y1="62.75" x2="100" y2="62.75" class="tick"></line>
+<line x1="95" y1="60" x2="100" y2="60" class="tick"></line>
+<line x1="95" y1="57.25" x2="100" y2="57.25" class="tick"></line>
+<line x1="95" y1="54.5" x2="100" y2="54.5" class="tick"></line>
+<line x1="95" y1="51.75" x2="100" y2="51.75" class="tick"></line>
+<line x1="95" y1="49" x2="100" y2="49" class="tick"></line>
+<line x1="95" y1="46.25" x2="100" y2="46.25" class="tick"></line>
+<line x1="95" y1="43.5" x2="100" y2="43.5" class="tick"></line>
+<line x1="95" y1="40.75" x2="100" y2="40.75" class="tick"></line>
+<line x1="95" y1="38" x2="100" y2="38" class="tick"></line>
+<line x1="95" y1="35.25" x2="100" y2="35.25" class="tick"></line>
+<line x1="95" y1="32.5" x2="100" y2="32.5" class="tick"></line>
+<line x1="95" y1="29.75" x2="100" y2="29.75" class="tick"></line>
+<line x1="95" y1="27" x2="100" y2="27" class="tick"></line>
+<line x1="95" y1="24.25" x2="100" y2="24.25" class="tick"></line>
+<line x1="95" y1="21.5" x2="100" y2="21.5" class="tick"></line>
+<line x1="95" y1="18.75" x2="100" y2="18.75" class="tick"></line>
+<line x1="95" y1="16" x2="100" y2="16" class="tick"></line>
+<line x1="95" y1="13.25" x2="100" y2="13.25" class="tick"></line>
+<line x1="95" y1="10.5" x2="100" y2="10.5" class="tick"></line>
+<line x1="95" y1="7.75" x2="100" y2="7.75" class="tick"></line>
+<line x1="95" y1="5" x2="100" y2="5" class="tick"></line>
+<line x1="95" y1="2.25" x2="100" y2="2.25" class="tick"></line>
+<line x1="90" y1="214" x2="100" y2="214" class="mtick"></line>
+<line x1="90" y1="192" x2="100" y2="192" class="mtick"></line>
+<line x1="90" y1="170" x2="100" y2="170" class="mtick"></line>
+<line x1="90" y1="148" x2="100" y2="148" class="mtick"></line>
+<line x1="90" y1="126" x2="100" y2="126" class="mtick"></line>
+<line x1="90" y1="104" x2="100" y2="104" class="mtick"></line>
+<line x1="90" y1="82" x2="100" y2="82" class="mtick"></line>
+<line x1="90" y1="60" x2="100" y2="60" class="mtick"></line>
+<line x1="90" y1="38" x2="100" y2="38" class="mtick"></line>
+<line x1="90" y1="16" x2="100" y2="16" class="mtick"></line>
+</g><path class="lightedge2" d="M100 5 L5 5 L5 225 L100 225"></path><line x1="100" y1="5" x2="100" y2="225" class="edge"></line>
+<text x="52.5" y="233" class="scale2"><tspan class="base">× 2</tspan><tspan class="exp" dx="0" dy="-0.4em">−13</tspan></text>
+<rect x="110" y="5" width="95" height="220" class="base10"></rect>
+<g clip-path="url(#clip2)"><text x="122" y="211.86" class="tick10">100050</text>
+<text x="122" y="189.332" class="tick10">100060</text>
+<text x="122" y="166.804" class="tick10">100070</text>
+<text x="122" y="144.276" class="tick10">100080</text>
+<text x="122" y="121.748" class="tick10">100090</text>
+<text x="122" y="99.22" class="tick10">100100</text>
+<text x="122" y="76.692" class="tick10">100110</text>
+<text x="122" y="54.164" class="tick10">100120</text>
+<text x="122" y="31.636" class="tick10">100130</text>
+<text x="122" y="9.108" class="tick10">100140</text>
+<line x1="110" y1="227.13" x2="115" y2="227.13" class="tick"></line>
+<line x1="110" y1="224.877" x2="115" y2="224.877" class="tick"></line>
+<line x1="110" y1="222.624" x2="115" y2="222.624" class="tick"></line>
+<line x1="110" y1="220.371" x2="115" y2="220.371" class="tick"></line>
+<line x1="110" y1="218.118" x2="115" y2="218.118" class="tick"></line>
+<line x1="110" y1="215.866" x2="115" y2="215.866" class="tick"></line>
+<line x1="110" y1="213.613" x2="115" y2="213.613" class="tick"></line>
+<line x1="110" y1="211.36" x2="115" y2="211.36" class="tick"></line>
+<line x1="110" y1="209.107" x2="115" y2="209.107" class="tick"></line>
+<line x1="110" y1="206.854" x2="115" y2="206.854" class="tick"></line>
+<line x1="110" y1="204.602" x2="115" y2="204.602" class="tick"></line>
+<line x1="110" y1="202.349" x2="115" y2="202.349" class="tick"></line>
+<line x1="110" y1="200.096" x2="115" y2="200.096" class="tick"></line>
+<line x1="110" y1="197.843" x2="115" y2="197.843" class="tick"></line>
+<line x1="110" y1="195.59" x2="115" y2="195.59" class="tick"></line>
+<line x1="110" y1="193.338" x2="115" y2="193.338" class="tick"></line>
+<line x1="110" y1="191.085" x2="115" y2="191.085" class="tick"></line>
+<line x1="110" y1="188.832" x2="115" y2="188.832" class="tick"></line>
+<line x1="110" y1="186.579" x2="115" y2="186.579" class="tick"></line>
+<line x1="110" y1="184.326" x2="115" y2="184.326" class="tick"></line>
+<line x1="110" y1="182.074" x2="115" y2="182.074" class="tick"></line>
+<line x1="110" y1="179.821" x2="115" y2="179.821" class="tick"></line>
+<line x1="110" y1="177.568" x2="115" y2="177.568" class="tick"></line>
+<line x1="110" y1="175.315" x2="115" y2="175.315" class="tick"></line>
+<line x1="110" y1="173.062" x2="115" y2="173.062" class="tick"></line>
+<line x1="110" y1="170.81" x2="115" y2="170.81" class="tick"></line>
+<line x1="110" y1="168.557" x2="115" y2="168.557" class="tick"></line>
+<line x1="110" y1="166.304" x2="115" y2="166.304" class="tick"></line>
+<line x1="110" y1="164.051" x2="115" y2="164.051" class="tick"></line>
+<line x1="110" y1="161.798" x2="115" y2="161.798" class="tick"></line>
+<line x1="110" y1="159.546" x2="115" y2="159.546" class="tick"></line>
+<line x1="110" y1="157.293" x2="115" y2="157.293" class="tick"></line>
+<line x1="110" y1="155.04" x2="115" y2="155.04" class="tick"></line>
+<line x1="110" y1="152.787" x2="115" y2="152.787" class="tick"></line>
+<line x1="110" y1="150.534" x2="115" y2="150.534" class="tick"></line>
+<line x1="110" y1="148.282" x2="115" y2="148.282" class="tick"></line>
+<line x1="110" y1="146.029" x2="115" y2="146.029" class="tick"></line>
+<line x1="110" y1="143.776" x2="115" y2="143.776" class="tick"></line>
+<line x1="110" y1="141.523" x2="115" y2="141.523" class="tick"></line>
+<line x1="110" y1="139.27" x2="115" y2="139.27" class="tick"></line>
+<line x1="110" y1="137.018" x2="115" y2="137.018" class="tick"></line>
+<line x1="110" y1="134.765" x2="115" y2="134.765" class="tick"></line>
+<line x1="110" y1="132.512" x2="115" y2="132.512" class="tick"></line>
+<line x1="110" y1="130.259" x2="115" y2="130.259" class="tick"></line>
+<line x1="110" y1="128.006" x2="115" y2="128.006" class="tick"></line>
+<line x1="110" y1="125.754" x2="115" y2="125.754" class="tick"></line>
+<line x1="110" y1="123.501" x2="115" y2="123.501" class="tick"></line>
+<line x1="110" y1="121.248" x2="115" y2="121.248" class="tick"></line>
+<line x1="110" y1="118.995" x2="115" y2="118.995" class="tick"></line>
+<line x1="110" y1="116.742" x2="115" y2="116.742" class="tick"></line>
+<line x1="110" y1="114.49" x2="115" y2="114.49" class="tick"></line>
+<line x1="110" y1="112.237" x2="115" y2="112.237" class="tick"></line>
+<line x1="110" y1="109.984" x2="115" y2="109.984" class="tick"></line>
+<line x1="110" y1="107.731" x2="115" y2="107.731" class="tick"></line>
+<line x1="110" y1="105.478" x2="115" y2="105.478" class="tick"></line>
+<line x1="110" y1="103.226" x2="115" y2="103.226" class="tick"></line>
+<line x1="110" y1="100.973" x2="115" y2="100.973" class="tick"></line>
+<line x1="110" y1="98.72" x2="115" y2="98.72" class="tick"></line>
+<line x1="110" y1="96.467" x2="115" y2="96.467" class="tick"></line>
+<line x1="110" y1="94.214" x2="115" y2="94.214" class="tick"></line>
+<line x1="110" y1="91.962" x2="115" y2="91.962" class="tick"></line>
+<line x1="110" y1="89.709" x2="115" y2="89.709" class="tick"></line>
+<line x1="110" y1="87.456" x2="115" y2="87.456" class="tick"></line>
+<line x1="110" y1="85.203" x2="115" y2="85.203" class="tick"></line>
+<line x1="110" y1="82.95" x2="115" y2="82.95" class="tick"></line>
+<line x1="110" y1="80.698" x2="115" y2="80.698" class="tick"></line>
+<line x1="110" y1="78.445" x2="115" y2="78.445" class="tick"></line>
+<line x1="110" y1="76.192" x2="115" y2="76.192" class="tick"></line>
+<line x1="110" y1="73.939" x2="115" y2="73.939" class="tick"></line>
+<line x1="110" y1="71.686" x2="115" y2="71.686" class="tick"></line>
+<line x1="110" y1="69.434" x2="115" y2="69.434" class="tick"></line>
+<line x1="110" y1="67.181" x2="115" y2="67.181" class="tick"></line>
+<line x1="110" y1="64.928" x2="115" y2="64.928" class="tick"></line>
+<line x1="110" y1="62.675" x2="115" y2="62.675" class="tick"></line>
+<line x1="110" y1="60.422" x2="115" y2="60.422" class="tick"></line>
+<line x1="110" y1="58.17" x2="115" y2="58.17" class="tick"></line>
+<line x1="110" y1="55.917" x2="115" y2="55.917" class="tick"></line>
+<line x1="110" y1="53.664" x2="115" y2="53.664" class="tick"></line>
+<line x1="110" y1="51.411" x2="115" y2="51.411" class="tick"></line>
+<line x1="110" y1="49.158" x2="115" y2="49.158" class="tick"></line>
+<line x1="110" y1="46.906" x2="115" y2="46.906" class="tick"></line>
+<line x1="110" y1="44.653" x2="115" y2="44.653" class="tick"></line>
+<line x1="110" y1="42.4" x2="115" y2="42.4" class="tick"></line>
+<line x1="110" y1="40.147" x2="115" y2="40.147" class="tick"></line>
+<line x1="110" y1="37.894" x2="115" y2="37.894" class="tick"></line>
+<line x1="110" y1="35.642" x2="115" y2="35.642" class="tick"></line>
+<line x1="110" y1="33.389" x2="115" y2="33.389" class="tick"></line>
+<line x1="110" y1="31.136" x2="115" y2="31.136" class="tick"></line>
+<line x1="110" y1="28.883" x2="115" y2="28.883" class="tick"></line>
+<line x1="110" y1="26.63" x2="115" y2="26.63" class="tick"></line>
+<line x1="110" y1="24.378" x2="115" y2="24.378" class="tick"></line>
+<line x1="110" y1="22.125" x2="115" y2="22.125" class="tick"></line>
+<line x1="110" y1="19.872" x2="115" y2="19.872" class="tick"></line>
+<line x1="110" y1="17.619" x2="115" y2="17.619" class="tick"></line>
+<line x1="110" y1="15.366" x2="115" y2="15.366" class="tick"></line>
+<line x1="110" y1="13.114" x2="115" y2="13.114" class="tick"></line>
+<line x1="110" y1="10.861" x2="115" y2="10.861" class="tick"></line>
+<line x1="110" y1="8.608" x2="115" y2="8.608" class="tick"></line>
+<line x1="110" y1="6.355" x2="115" y2="6.355" class="tick"></line>
+<line x1="110" y1="4.102" x2="115" y2="4.102" class="tick"></line>
+<line x1="110" y1="211.36" x2="120" y2="211.36" class="mtick"></line>
+<line x1="110" y1="188.832" x2="120" y2="188.832" class="mtick"></line>
+<line x1="110" y1="166.304" x2="120" y2="166.304" class="mtick"></line>
+<line x1="110" y1="143.776" x2="120" y2="143.776" class="mtick"></line>
+<line x1="110" y1="121.248" x2="120" y2="121.248" class="mtick"></line>
+<line x1="110" y1="98.72" x2="120" y2="98.72" class="mtick"></line>
+<line x1="110" y1="76.192" x2="120" y2="76.192" class="mtick"></line>
+<line x1="110" y1="53.664" x2="120" y2="53.664" class="mtick"></line>
+<line x1="110" y1="31.136" x2="120" y2="31.136" class="mtick"></line>
+<line x1="110" y1="8.608" x2="120" y2="8.608" class="mtick"></line>
+</g><path class="lightedge10" d="M110 5 L205 5 L205 225 L110 225"></path><line x1="110" y1="5" x2="110" y2="225" class="edge"></line>
+<text x="157.5" y="233" class="scale10"><tspan class="base">× 10</tspan><tspan class="exp" dx="0" dy="-0.4em">−4</tspan></text>
+</svg>

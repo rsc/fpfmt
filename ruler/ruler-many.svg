@@ -1,0 +1,135 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="370" height="190" version="1.1" xmlns="http://www.w3.org/2000/svg"><defs><style type="text/css"><![CDATA[
+text {
+	font-family: 'Minion 3', serif;
+	font-variant-ligatures: none;
+	font-size: 16px;
+}
+text.scale2 {
+	dominant-baseline: hanging;
+	text-anchor: middle;
+}
+text.scale10 {
+	dominant-baseline: hanging;
+	text-anchor: middle;
+}
+tspan.base {
+	font-size: 16px;
+}
+tspan.exp {
+	font-size: 16px;
+}
+text.tick2 {
+	font-family: 'Source Code Pro', monospace;
+	font-size: 14px;
+	text-anchor: end;
+	dominant-baseline: middle;
+}
+text.tick10 {
+	font-size: 16px;
+	text-anchor: start;
+	dominant-baseline: middle;
+}
+line.edge {
+	stroke-width: 2px;
+	stroke: black;
+}
+path.lightedge2, path.lightedge10 {
+	stroke-width: 0.5px;
+	fill: none;
+}
+path.lightedge2 {
+	stroke: #aaffaa;
+}
+path.lightedge10 {
+	stroke: #aaffff;
+}
+line.tick {
+	stroke-width: 0.5px;
+	stroke: black;
+}
+line.mtick {
+	stroke-width: 1px;
+	stroke: black;
+}
+rect.base2 {
+	fill: #e9ffe9;
+}
+rect.base10 {
+	fill: #e9ffff;
+}
+rect.range2 {
+	fill: #e9ffe9;
+}
+line.range2 {
+	stroke: #aaffaa;
+	stroke-width: 1px;
+}
+line.dotted {
+	stroke: #444;
+	stroke-dasharray: 1;
+	stroke-width: 1px;
+}
+]]></style>
+<clipPath id="clip1"><rect x="5" y="5" width="175" height="160" class=""></rect>
+</clipPath>
+<clipPath id="clip2"><rect x="190" y="5" width="175" height="160" class=""></rect>
+</clipPath>
+</defs><rect x="5" y="5" width="175" height="160" class="base2"></rect>
+<g clip-path="url(#clip1)"><text x="168" y="138.833" class="tick2">0x13cf60753ec48e</text>
+<text x="168" y="85.5" class="tick2">0x13cf60753ec48f</text>
+<text x="168" y="32.167" class="tick2">0x13cf60753ec490</text>
+<line x1="175" y1="191.667" x2="180" y2="191.667" class="tick"></line>
+<line x1="175" y1="138.333" x2="180" y2="138.333" class="tick"></line>
+<line x1="175" y1="85" x2="180" y2="85" class="tick"></line>
+<line x1="175" y1="31.667" x2="180" y2="31.667" class="tick"></line>
+<line x1="175" y1="-21.667" x2="180" y2="-21.667" class="tick"></line>
+<line x1="170" y1="138.333" x2="180" y2="138.333" class="mtick"></line>
+<line x1="170" y1="85" x2="180" y2="85" class="mtick"></line>
+<line x1="170" y1="31.667" x2="180" y2="31.667" class="mtick"></line>
+</g><path class="lightedge2" d="M180 5 L5 5 L5 165 L180 165"></path><line x1="180" y1="5" x2="180" y2="165" class="edge"></line>
+<text x="92.5" y="173" class="scale2"><tspan class="base">× 2</tspan><tspan class="exp" dx="0" dy="-0.4em">13</tspan></text>
+<rect x="181" y="58.333" width="9" height="53.334" class="range2"></rect>
+<line x1="170.5" y1="111.667" x2="200" y2="111.667" class="dotted"></line>
+<line x1="170.5" y1="58.333" x2="200" y2="58.333" class="dotted"></line>
+<rect x="190" y="5" width="175" height="160" class="base10"></rect>
+<g clip-path="url(#clip2)"><text x="202" y="146.177" class="tick10">45678901234567855</text>
+<text x="202" y="113.625" class="tick10">45678901234567860</text>
+<text x="202" y="81.073" class="tick10">45678901234567865</text>
+<text x="202" y="48.521" class="tick10">45678901234567870</text>
+<text x="202" y="15.969" class="tick10">45678901234567875</text>
+<line x1="190" y1="165.208" x2="195" y2="165.208" class="tick"></line>
+<line x1="190" y1="158.698" x2="195" y2="158.698" class="tick"></line>
+<line x1="190" y1="152.188" x2="195" y2="152.188" class="tick"></line>
+<line x1="190" y1="145.677" x2="195" y2="145.677" class="tick"></line>
+<line x1="190" y1="139.167" x2="195" y2="139.167" class="tick"></line>
+<line x1="190" y1="132.656" x2="195" y2="132.656" class="tick"></line>
+<line x1="190" y1="126.146" x2="195" y2="126.146" class="tick"></line>
+<line x1="190" y1="119.635" x2="195" y2="119.635" class="tick"></line>
+<line x1="190" y1="113.125" x2="195" y2="113.125" class="tick"></line>
+<line x1="190" y1="106.615" x2="195" y2="106.615" class="tick"></line>
+<line x1="190" y1="100.104" x2="195" y2="100.104" class="tick"></line>
+<line x1="190" y1="93.594" x2="195" y2="93.594" class="tick"></line>
+<line x1="190" y1="87.083" x2="195" y2="87.083" class="tick"></line>
+<line x1="190" y1="80.573" x2="195" y2="80.573" class="tick"></line>
+<line x1="190" y1="74.063" x2="195" y2="74.063" class="tick"></line>
+<line x1="190" y1="67.552" x2="195" y2="67.552" class="tick"></line>
+<line x1="190" y1="61.042" x2="195" y2="61.042" class="tick"></line>
+<line x1="190" y1="54.531" x2="195" y2="54.531" class="tick"></line>
+<line x1="190" y1="48.021" x2="195" y2="48.021" class="tick"></line>
+<line x1="190" y1="41.51" x2="195" y2="41.51" class="tick"></line>
+<line x1="190" y1="35" x2="195" y2="35" class="tick"></line>
+<line x1="190" y1="28.49" x2="195" y2="28.49" class="tick"></line>
+<line x1="190" y1="21.979" x2="195" y2="21.979" class="tick"></line>
+<line x1="190" y1="15.469" x2="195" y2="15.469" class="tick"></line>
+<line x1="190" y1="8.958" x2="195" y2="8.958" class="tick"></line>
+<line x1="190" y1="2.448" x2="195" y2="2.448" class="tick"></line>
+<line x1="190" y1="145.677" x2="200" y2="145.677" class="mtick"></line>
+<line x1="190" y1="113.125" x2="200" y2="113.125" class="mtick"></line>
+<line x1="190" y1="80.573" x2="200" y2="80.573" class="mtick"></line>
+<line x1="190" y1="48.021" x2="200" y2="48.021" class="mtick"></line>
+<line x1="190" y1="15.469" x2="200" y2="15.469" class="mtick"></line>
+</g><path class="lightedge10" d="M190 5 L365 5 L365 165 L190 165"></path><line x1="190" y1="5" x2="190" y2="165" class="edge"></line>
+<text x="277.5" y="173" class="scale10"><tspan class="base">× 10</tspan><tspan class="exp" dx="0" dy="-0.4em">3</tspan></text>
+</svg>

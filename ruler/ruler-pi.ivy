@@ -1,0 +1,19 @@
+)get 'ruler.ivy'
+
+center = 0x1.921fb54442d18p1
+delta = 0x0.0000000000001p1
+
+wid = 28 * delta
+span = (center - wid) (center + wid)
+
+Ruler (5 5 160 165) (2 -51) span
+
+body = body, Line 'dotted' (RMaxX+1) (f2y center) (RMaxX+20) (f2y center)
+
+RMinX RMaxX = RMinX RMaxX + 10
+
+Ruler (NextRect 0) (10 -14) span
+
+SVG (RMaxX+5) (RMaxY+25) style defs body
+
+

@@ -1,0 +1,201 @@
+)origin 0
+
+op seq (x y) = x + iota (1+y-x)
+
+Header = `<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+`
+
+style = `
+text {
+	font-family: 'Minion 3', serif;
+	font-variant-ligatures: none;
+	font-size: 16px;
+}
+text.scale2 {
+	dominant-baseline: hanging;
+	text-anchor: middle;
+}
+text.scale10 {
+	dominant-baseline: hanging;
+	text-anchor: middle;
+}
+tspan.base {
+	font-size: 16px;
+}
+tspan.exp {
+	font-size: 16px;
+}
+text.tick2 {
+	font-family: 'Source Code Pro', monospace;
+	font-size: 14px;
+	text-anchor: end;
+	dominant-baseline: middle;
+}
+text.tick10 {
+	font-size: 16px;
+	text-anchor: start;
+	dominant-baseline: middle;
+}
+line.edge {
+	stroke-width: 2px;
+	stroke: black;
+}
+path.lightedge2, path.lightedge10 {
+	stroke-width: 0.5px;
+	fill: none;
+}
+path.lightedge2 {
+	stroke: #aaffaa;
+}
+path.lightedge10 {
+	stroke: #aaffff;
+}
+line.tick {
+	stroke-width: 0.5px;
+	stroke: black;
+}
+line.mtick {
+	stroke-width: 1px;
+	stroke: black;
+}
+rect.base2 {
+	fill: #e9ffe9;
+}
+rect.base10 {
+	fill: #e9ffff;
+}
+rect.range2 {
+	fill: #e9ffe9;
+}
+line.range2 {
+	stroke: #aaffaa;
+	stroke-width: 1px;
+}
+line.dotted {
+	stroke: #444;
+	stroke-dasharray: 1;
+	stroke-width: 1px;
+}
+`
+
+op Elem (tag attrs body) =
+	'<', tag, attrs, '>', body, '</', tag, '>'
+
+op Attrs x =
+	(count x) == 0: ''
+	key val = 2 take x
+	' ', key, '="', (text val), '"', Attrs 2 drop x
+
+op Rect (class x1 y1 x2 y2) =
+	(Elem 'rect' (Attrs 'x' x1 'y' y1 'width' (x2-x1) 'height' (y2-y1) 'class' class) ''), '\n'
+
+op Line (class x1 y1 x2 y2) =
+	(Elem 'line' (Attrs 'x1' x1 'y1' y1 'x2' x2 'y2' y2 'class' class) ''), '\n'
+
+op Text (class x y inner) =
+	(Elem 'text' (Attrs 'x' x 'y' y 'class' class) inner), '\n'
+
+defs = ''
+clipPaths = 0
+clipName = ''
+gap = 0
+base = 0
+exp = 0
+lo = 0
+hi = 0
+RMinX RMinY RMaxX RMaxY = 0 0 0 0
+tickLo = 0
+tickHi = 0
+labelLo = 0
+labelHi = 0
+labelGap = 0
+
+op SetRect (x1 y1 x2 y2) =
+	global = RMinX RMinY RMaxX RMaxY clipPaths clipName defs
+	RMinX RMinY RMaxX RMaxY = x1 y1 x2 y2
+	clipPaths = clipPaths + 1
+	clipName = 'clip', text clipPaths
+	defs = defs, (Elem 'clipPath' (Attrs 'id' clipName) (Rect '' x1 y1 x2 y2)), '\n'
+
+op labelSpacing (lo hi gap) =
+	lo = gap*ceil lo/gap
+	hi = gap*floor hi/gap
+	n = 1 + (hi-lo)/gap
+	n <= 10: lo hi gap
+	(n <= 20) and (base == 10): labelSpacing lo hi (2*gap)
+	(n <= 50) and (base == 10): labelSpacing lo hi (5*gap)
+	labelSpacing lo hi (base*gap)
+
+op SetScale (b e l h) =
+	global = base exp lo hi gap tickLo tickHi labelLo labelHi labelGap
+	base = b
+	exp = e
+	lo = l
+	hi = h
+	gap = base**exp
+	tickLo = gap * ceil lo/gap
+	tickHi = gap * floor hi/gap
+	labelLo labelHi labelGap = labelSpacing lo hi gap
+
+op inc round x =
+	inc * floor 0.5 + x/inc
+
+op f2y f =
+	float 0.001 round RMinY + (RMaxY-RMinY)*(hi-f)/(hi-lo)
+
+op tick f =
+	y = f2y f
+	base == 2: Line 'tick' (RMaxX-5) y RMaxX y
+	Line 'tick' RMinX y (RMinX+5) y
+
+op majorTick f =
+	y = f2y f
+	base == 2: Line 'mtick' (RMaxX-10) y RMaxX y
+	Line 'mtick' RMinX y (RMinX+10) y
+
+op labelText x =
+	base == 2: ('#x' text x)
+	text x
+
+op label f =
+	base == 2: Text 'tick2' (RMaxX-12) (float 0.5+(f2y f)) (labelText f/gap)
+	Text 'tick10' (RMinX+12) (float 0.5+(f2y f)) (labelText f/gap)
+
+op edge unused =
+	base == 2: Line 'edge' RMaxX RMinY RMaxX RMaxY
+	Line 'edge' RMinX RMinY RMinX RMaxY
+
+op lightedge unused =
+	base == 2: Elem 'path' (Attrs 'class' 'lightedge2' 'd' ('M', (text RMaxX), ' ', (text RMinY), ' L', (text RMinX), ' ', (text RMinY),  ' L', (text RMinX), ' ', (text RMaxY), ' L', (text RMaxX), ' ', (text RMaxY))) ''
+	Elem 'path' (Attrs 'class' 'lightedge10' 'd' ('M', (text RMinX), ' ', (text RMinY), ' L', (text RMaxX), ' ', (text RMinY),  ' L', (text RMaxX), ' ', (text RMaxY), ' L', (text RMinX), ' ', (text RMaxY))) ''
+
+op expText exp =
+	exp < 0: '−', text (-exp)
+	text exp
+
+op scale unused =
+	base == 2: Text 'scale2' (float 0.5 round (RMinX+RMaxX)/2) (RMaxY+8) ((Elem 'tspan' (Attrs 'class' 'base') ('× ', text base)), (Elem 'tspan' (Attrs 'class' 'exp' 'dx' 0 'dy' '-0.4em') (expText exp)))
+	Text 'scale10' (float 0.5 round (RMinX+RMaxX)/2) (RMaxY+8) ((Elem 'tspan' (Attrs 'class' 'base') ('× ', text base)), (Elem 'tspan' (Attrs 'class' 'exp' 'dx' 0 'dy' '-0.4em') (expText exp)))
+
+body = ''
+
+op Ruler ((x1 y1 x2 y2) (base exp) (lo hi)) =
+	global = body
+	SetRect x1 y1 x2 y2
+	SetScale base exp lo hi
+	background = Rect ('base', text base) RMinX RMinY RMaxX RMaxY
+	labels = ,/ label@ labelGap * (seq (labelLo labelHi / labelGap))
+	majorTicks = ,/ majorTick@ labelGap * (seq (labelLo labelHi / labelGap))
+	ticks = ,/ tick@ gap * (seq (tickLo tickHi / gap) + -1 1)
+	body = body, background, (Elem 'g' (Attrs 'clip-path' ('url(#',clipName,')')) (labels, ticks, majorTicks)), (lightedge 1), (edge 1), (scale 1)
+
+op SVG (w h style defs inner) =
+	Header, Elem 'svg' (Attrs 'width' w 'height' h 'version' '1.1' 'xmlns' 'http://www.w3.org/2000/svg') ('<defs><style type="text/css"><![CDATA[', style, ']]></style>\n',defs,'</defs>', inner)
+
+op NextRect unused =
+	dx = RMaxX - RMinX
+	RMinX = RMaxX + 10
+	RMaxX = RMinX + dx
+	RMinX RMinY RMaxX RMaxY
+

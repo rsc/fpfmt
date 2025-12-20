@@ -1,0 +1,18 @@
+)get 'ruler.ivy'
+
+center = 0x13cf60753ec48fp13 # 45678901234567890e3
+delta = 0x1p13
+wid = 3/2 * delta
+span = (center - wid) (center + wid)
+
+Ruler (5 5 180 165) (2 13) span
+
+rlo rhi = (center-(1/2)*delta) (center+(1/2)*delta)
+body = body, Rect 'range2' (RMaxX+1) (f2y rhi) (RMaxX+10) (f2y rlo)
+
+body = body, Line 'dotted' (float RMaxX-9.5) (f2y rlo) (RMaxX+20) (f2y rlo)
+body = body, Line 'dotted' (float RMaxX-9.5) (f2y rhi) (RMaxX+20) (f2y rhi)
+
+Ruler (NextRect 0) (10 3) span
+
+SVG (RMaxX+5) (RMaxY+25) style defs body

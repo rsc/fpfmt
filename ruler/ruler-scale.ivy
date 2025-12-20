@@ -1,0 +1,14 @@
+)get 'ruler.ivy'
+
+center = 10 + 19*2**-11
+delta = 2**-11
+
+wid = 10 * delta
+span = (center - wid) (center + wid)
+
+Ruler (5 5 100 225) (2 -13) span
+
+Ruler (NextRect 0) (10 -4) span
+
+SVG (RMaxX+5) (RMaxY+25) style defs body
+
