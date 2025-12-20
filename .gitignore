@@ -1,0 +1,5 @@
+.benchlab
+py/__pycache__
+plot/*.svg
+plot/*.out
+plot/svg.html
