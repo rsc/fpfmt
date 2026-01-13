@@ -57,9 +57,21 @@ func main() {
 			data = load(gg.data)
 			lastData = gg.data
 		}
-		svg := cdf(data, algs, gg.op, gg.title)
-		if err := os.WriteFile(gg.svg+"-cdf.svg", []byte(svg), 0666); err != nil {
+		svgOut, epsOut := cdf(data, algs, gg.op, gg.title)
+		if err := os.WriteFile(gg.svg+"-cdf.svg", []byte(svgOut), 0666); err != nil {
 			log.Fatal(err)
+		}
+		if err := os.WriteFile(gg.svg+"-cdf.eps", []byte(epsOut), 0666); err != nil {
+			log.Fatal(err)
+		}
+		pngs, err := svg.EPSToPNGs(gg.svg+"-cdf", []byte(epsOut), 400, 300)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for filename, data := range pngs {
+			if err := os.WriteFile(filename, data, 0666); err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 
@@ -69,15 +81,27 @@ func main() {
 			data = load(gg.data)
 			lastData = gg.data
 		}
-		svg := scatter(data, algs, gg.op, gg.title)
-		if err := os.WriteFile(gg.svg+"-scat.svg", []byte(svg), 0666); err != nil {
+		svgOut, epsOut := scatter(data, algs, gg.op, gg.title)
+		if err := os.WriteFile(gg.svg+"-scat.svg", []byte(svgOut), 0666); err != nil {
 			log.Fatal(err)
+		}
+		if err := os.WriteFile(gg.svg+"-scat.eps", []byte(epsOut), 0666); err != nil {
+			log.Fatal(err)
+		}
+		pngs, err := svg.EPSToPNGs(gg.svg+"-scat", []byte(epsOut), 600, 300)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for filename, data := range pngs {
+			if err := os.WriteFile(filename, data, 0666); err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 
 }
 
-func cdf(data []Mark, algs []string, op, title string) string {
+func cdf(data []Mark, algs []string, op, title string) (string, string) {
 	const (
 		Width  = 400
 		Height = 300
@@ -134,10 +158,10 @@ func cdf(data []Mark, algs []string, op, title string) string {
 	g.Y.Max = 1
 	g.Y.AutoScale()
 	g.X.AutoTimeLogScale(g)
-	return g.SVG()
+	return g.SVG(), g.EPS()
 }
 
-func scatter(data []Mark, algs []string, op, title string) string {
+func scatter(data []Mark, algs []string, op, title string) (string, string) {
 	const (
 		Width  = 600
 		Height = 300
@@ -150,7 +174,7 @@ func scatter(data []Mark, algs []string, op, title string) string {
 		DBox:    image.Rect(80, 40, Width-100, Height-50),
 		Title:   title,
 	}
-	g.X.Title = "log₂(f)"
+	g.X.Title = "log₂ f"
 	g.Y.Title = "Time"
 	g.X.Min = -1024
 	g.X.Max = +1024
@@ -198,11 +222,11 @@ func scatter(data []Mark, algs []string, op, title string) string {
 		g.Y.Max = max(g.Y.Max, y)
 	}
 	if g.Y.Max < g.Y.Min {
-		return ""
+		return "", ""
 	}
 
 	g.Y.AutoTimeLogScale(g)
-	return g.SVG()
+	return g.SVG(), g.EPS()
 }
 
 type Mark struct {
