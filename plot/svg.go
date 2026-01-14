@@ -7,15 +7,22 @@
 package main
 
 import (
+	"flag"
 	"image"
 	"log"
 	"math"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 
 	"rsc.io/fpfmt/svg"
+)
+
+var (
+	png   = flag.Bool("png", false, "generate PNG files")
+	graph = flag.String("graph", "", "regexp pattern to filter graph names")
 )
 
 var graphs = []struct {
@@ -24,23 +31,15 @@ var graphs = []struct {
 	op    string
 	title string
 }{
-	{"linux-ryzen.out", "fpfmt-ryzen-fixed2", "fixed2", "Fmt(FixedWidth(f, 2)) [Linux, AMD Ryzen 9]"},
-	{"linux-ryzen.out", "fpfmt-ryzen-fixed4", "fixed4", "Fmt(FixedWidth(f, 4)) [Linux, AMD Ryzen 9]"},
-	{"linux-ryzen.out", "fpfmt-ryzen-fixed8", "fixed8", "Fmt(FixedWidth(f, 8)) [Linux, AMD Ryzen 9]"},
-	{"linux-ryzen.out", "fpfmt-ryzen-fixed16", "fixed16", "Fmt(FixedWidth(f, 16)) [Linux, AMD Ryzen 9]"},
+	{"linux-ryzen.out", "fpfmt-ryzen-fixed6", "fixed6", "Fmt(FixedWidth(f, 6)) [Linux, AMD Ryzen 9]"},
 	{"linux-ryzen.out", "fpfmt-ryzen-fixed17", "fixed17", "Fmt(FixedWidth(f, 17)) [Linux, AMD Ryzen 9]"},
-	{"linux-ryzen.out", "fpfmt-ryzen-fixed18", "fixed18", "Fmt(FixedWidth(f, 18)) [Linux, AMD Ryzen 9]"},
 	{"linux-ryzen.out", "fpfmt-ryzen-short", "short", "Fmt(Short(f)) [Linux, AMD Ryzen 9]"},
 	{"linux-ryzen.out", "fpfmt-ryzen-shortraw", "shortraw", "Short(f) [Linux, AMD Ryzen 9]"},
 	{"linux-ryzen.out", "fpfmt-ryzen-parse", "parse", "Parse(Unfmt(s)) [Linux, AMD Ryzen 9]"},
 	{"linux-ryzen.out", "fpfmt-ryzen-parseraw", "parseraw", "Parse(d, p) [Linux, AMD Ryzen 9]"},
 
-	{"darwin-m4.out", "fpfmt-apple-fixed2", "fixed2", "Fmt(FixedWidth(f, 2)) [macOS, Apple M4]"},
-	{"darwin-m4.out", "fpfmt-apple-fixed4", "fixed4", "Fmt(FixedWidth(f, 4)) [macOS, Apple M4]"},
-	{"darwin-m4.out", "fpfmt-apple-fixed8", "fixed8", "Fmt(FixedWidth(f, 8)) [macOS, Apple M4]"},
-	{"darwin-m4.out", "fpfmt-apple-fixed16", "fixed16", "Fmt(FixedWidth(f, 16)) [macOS, Apple M4]"},
+	{"darwin-m4.out", "fpfmt-apple-fixed6", "fixed6", "Fmt(FixedWidth(f, 6)) [macOS, Apple M4]"},
 	{"darwin-m4.out", "fpfmt-apple-fixed17", "fixed17", "Fmt(FixedWidth(f, 17)) [macOS, Apple M4]"},
-	{"darwin-m4.out", "fpfmt-apple-fixed18", "fixed18", "Fmt(FixedWidth(f, 18)) [macOS, Apple M4]"},
 	{"darwin-m4.out", "fpfmt-apple-short", "short", "Fmt(Short(f)) [macOS, Apple M4]"},
 	{"darwin-m4.out", "fpfmt-apple-shortraw", "shortraw", "Short(f) [macOS, Apple M4]"},
 	{"darwin-m4.out", "fpfmt-apple-parse", "parse", "Parse(Unfmt(s)) [macOS, Apple M4]"},
@@ -48,11 +47,25 @@ var graphs = []struct {
 }
 
 func main() {
+	flag.Parse()
+
+	var graphRE *regexp.Regexp
+	if *graph != "" {
+		var err error
+		graphRE, err = regexp.Compile(*graph)
+		if err != nil {
+			log.Fatalf("invalid -graph regexp: %v", err)
+		}
+	}
+
 	var data []Mark
 	lastData := ""
 
 	algs := []string{"uscale", "uscalec", "fast_float", "abseil", "ryu", "dragonbox", "go125", "dmg2017", "dmg1997", "dblconv", "libc"}
 	for _, gg := range graphs {
+		if graphRE != nil && !graphRE.MatchString(gg.svg) {
+			continue
+		}
 		if gg.data != lastData {
 			data = load(gg.data)
 			lastData = gg.data
@@ -64,19 +77,24 @@ func main() {
 		if err := os.WriteFile(gg.svg+"-cdf.eps", []byte(epsOut), 0666); err != nil {
 			log.Fatal(err)
 		}
-		pngs, err := svg.EPSToPNGs(gg.svg+"-cdf", []byte(epsOut), 400, 300)
-		if err != nil {
-			log.Fatal(err)
-		}
-		for filename, data := range pngs {
-			if err := os.WriteFile(filename, data, 0666); err != nil {
+		if *png {
+			pngs, err := svg.EPSToPNGs(gg.svg+"-cdf", []byte(epsOut), 400, 300)
+			if err != nil {
 				log.Fatal(err)
+			}
+			for filename, data := range pngs {
+				if err := os.WriteFile(filename, data, 0666); err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 	}
 
 	algs = []string{"libc", "dblconv", "dmg1997", "dmg2017", "ryu", "dragonbox", "abseil", "fast_float", "uscale", "uscalec"}
 	for _, gg := range graphs {
+		if graphRE != nil && !graphRE.MatchString(gg.svg) {
+			continue
+		}
 		if gg.data != lastData {
 			data = load(gg.data)
 			lastData = gg.data
@@ -88,13 +106,15 @@ func main() {
 		if err := os.WriteFile(gg.svg+"-scat.eps", []byte(epsOut), 0666); err != nil {
 			log.Fatal(err)
 		}
-		pngs, err := svg.EPSToPNGs(gg.svg+"-scat", []byte(epsOut), 600, 300)
-		if err != nil {
-			log.Fatal(err)
-		}
-		for filename, data := range pngs {
-			if err := os.WriteFile(filename, data, 0666); err != nil {
+		if *png {
+			pngs, err := svg.EPSToPNGs(gg.svg+"-scat", []byte(epsOut), 600, 300)
+			if err != nil {
 				log.Fatal(err)
+			}
+			for filename, data := range pngs {
+				if err := os.WriteFile(filename, data, 0666); err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 	}
@@ -137,11 +157,16 @@ func cdf(data []Mark, algs []string, op, title string) (string, string) {
 		g.X.Max = max(g.X.Max, x)
 	}
 
+	total := make(map[string]float64)
 	for _, l := range g.Lines {
 		if len(l.Points) < 2 {
 			continue
 		}
 		sort.Slice(l.Points, func(i, j int) bool { return l.Points[i].X < l.Points[j].X })
+		if len(l.Points) > 1000 {
+			n := len(l.Points)
+			l.Points = l.Points[n/1000 : len(l.Points)-n/1000]
+		}
 		const N = 1000
 		if len(l.Points) > 2*N {
 			trim := make([]svg.Point, N+1)
@@ -152,8 +177,21 @@ func cdf(data []Mark, algs []string, op, title string) (string, string) {
 		}
 		for i := range l.Points {
 			l.Points[i].Y = float64(i) / float64(len(l.Points)-1)
+			total[l.Name] += l.Points[i].X
 		}
 	}
+
+	key := func(l *svg.Line) float64 {
+		if len(l.Points) == 0 {
+			return 0
+		}
+		return l.Points[len(l.Points)*3/4].X
+	}
+	sort.Slice(g.Lines, func(i, j int) bool {
+		return total[g.Lines[i].Name] > total[g.Lines[j].Name]
+		return key(g.Lines[i]) < key(g.Lines[j])
+	})
+
 	g.Y.Min = 0
 	g.Y.Max = 1
 	g.Y.AutoScale()
@@ -204,6 +242,7 @@ func scatter(data []Mark, algs []string, op, title string) (string, string) {
 	g.Y.Min = math.Inf(+1)
 	g.Y.Max = math.Inf(-1)
 
+	total := make(map[string]float64)
 	byAlg := make(map[string]*svg.Scatter)
 	for _, alg := range algs {
 		s := &svg.Scatter{Name: alg}
@@ -220,10 +259,15 @@ func scatter(data []Mark, algs []string, op, title string) (string, string) {
 		s.Points = append(s.Points, svg.Point{math.Log2(m.F), y})
 		g.Y.Min = min(g.Y.Min, y)
 		g.Y.Max = max(g.Y.Max, y)
+		total[s.Name] += y
 	}
 	if g.Y.Max < g.Y.Min {
 		return "", ""
 	}
+
+	sort.Slice(g.Scatters, func(i, j int) bool {
+		return total[g.Scatters[i].Name] > total[g.Scatters[j].Name]
+	})
 
 	g.Y.AutoTimeLogScale(g)
 	return g.SVG(), g.EPS()
