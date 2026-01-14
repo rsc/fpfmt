@@ -1,0 +1,12 @@
+#!/usr/local/plan9/bin/rc -ex
+
+rm -f darwin-m4.out
+GOTOOLCHAIN=go1.26rc1 go test -c
+ssh s7 rm -rf /tmp/fpfmt.rebench
+ssh s7 mkdir -p /tmp/fpfmt.rebench
+scp -r ../fpfmt s7:/tmp/fpfmt.rebench
+ssh s7 'cd /tmp/fpfmt.rebench/fpfmt && GOTOOLCHAIN=go1.26rc1 go test -c'
+ssh s7 'cd /tmp/fpfmt.rebench/fpfmt && ./fpfmt.test -test.run=Scatter/rand -scatter=linux-ryzen.out '$"* >[2=1] | cat > rebench.s7 &
+./fpfmt.test -test.run=Scatter/rand -scatter=darwin-m4.out $* >[2=1] | cat > rebench.local &
+wait
+scp s7:/tmp/fpfmt.rebench/fpfmt/linux-ryzen.out .
