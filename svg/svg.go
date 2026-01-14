@@ -316,6 +316,8 @@ func (g *Graph) drawLine(l *Line) {
 }
 
 func (g *Graph) drawBBox() {
+	return
+
 	var path bytes.Buffer
 	fmt.Fprintf(&path, "M %d %d L %d %d L %d %d L %d %d Z",
 		g.BBox.Min.X, g.BBox.Min.Y,
@@ -335,7 +337,7 @@ func (g *Graph) SVG() string {
 	}
 	g.drawLegend()
 	g.drawAxes()
-	g.drawBBox()
+	//g.drawBBox()
 	return svgHeader + g.elem("svg",
 		g.attrs(
 			"width", g.BBox.Dx(),
@@ -387,8 +389,8 @@ func (g *Graph) EPS() string {
 	fmt.Fprintf(&buf, "/MinionPro-Bold-ISOLatin1 exch definefont pop\n")
 	fmt.Fprintf(&buf, "/MinionPro-Regular-ISOLatin1 findfont 16 scalefont setfont\n")
 	fmt.Fprintf(&buf, "1 setlinewidth\n")
-	fmt.Fprintf(&buf, "0 setlinejoin\n")   // 0 = miter join, matches SVG default
-	fmt.Fprintf(&buf, "0 setlinecap\n\n")  // 0 = butt cap, matches SVG default
+	fmt.Fprintf(&buf, "0 setlinejoin\n")  // 0 = miter join, matches SVG default
+	fmt.Fprintf(&buf, "0 setlinecap\n\n") // 0 = butt cap, matches SVG default
 
 	// Helper procedures
 	fmt.Fprintf(&buf, "/M { moveto } def\n")
@@ -536,7 +538,7 @@ func (g *Graph) epsInner() string {
 }
 
 func (g *Graph) flipY(y float64) float64 {
-	return float64(g.BBox.Max.Y - g.BBox.Min.Y) - y
+	return float64(g.BBox.Max.Y-g.BBox.Min.Y) - y
 }
 
 func (g *Graph) extractAttr(elem, attr string) float64 {
@@ -572,18 +574,18 @@ func (g *Graph) extractStrAttr(elem, attr string) string {
 func (g *Graph) epsSetColor(buf *bytes.Buffer, class string) {
 	// Map CSS classes to PostScript colors
 	colors := map[string]string{
-		"uscale":     "0.533 0.533 0.533",     // #888
-		"uscalec":    "0 0 0",                 // #000
-		"uscalet":    "1 1 0",                 // yellow
-		"dragonbox":  "0.533 0.533 1",         // #88f
-		"abseil":     "0.533 0.533 1",         // #88f
-		"ryu":        "0 0 1",                 // #00f
-		"fast_float": "0 0 1",                 // #00f
-		"dblconv":    "1 0.647 0",             // orange
-		"dmg1997":    "1 0.533 0.533",         // #f88
-		"dmg2017":    "1 0 0",                 // #f00
-		"libc":       "1 0.867 0",             // #fd0
-		"go125":      "0.933 0.510 0.933",     // violet
+		"uscale":     "0.533 0.533 0.533", // #888
+		"uscalec":    "0 0 0",             // #000
+		"uscalet":    "1 1 0",             // yellow
+		"dragonbox":  "0.533 0.533 1",     // #88f
+		"abseil":     "0.533 0.533 1",     // #88f
+		"ryu":        "0 0 1",             // #00f
+		"fast_float": "0 0 1",             // #00f
+		"dblconv":    "1 0.647 0",         // orange
+		"dmg1997":    "1 0.533 0.533",     // #f88
+		"dmg2017":    "1 0 0",             // #f00
+		"libc":       "1 0.867 0",         // #fd0
+		"go125":      "0.933 0.510 0.933", // violet
 	}
 
 	// Extract the name from compound classes like "line dragonbox" or "scat ryu"
@@ -671,8 +673,8 @@ func (g *Graph) epsText(buf *bytes.Buffer, class string, x, y float64, text stri
 	fmt.Fprintf(buf, "0 0 0 setrgbcolor\n")
 
 	// Replace UTF-8 characters with PostScript equivalents
-	text = strings.ReplaceAll(text, "µ", "\\265")  // micro sign
-	text = strings.ReplaceAll(text, "−", "-")      // minus sign U+2212 -> hyphen-minus
+	text = strings.ReplaceAll(text, "µ", "\\265") // micro sign
+	text = strings.ReplaceAll(text, "−", "-")     // minus sign U+2212 -> hyphen-minus
 
 	// Handle text anchor based on class
 	if strings.Contains(class, "xtick") {
