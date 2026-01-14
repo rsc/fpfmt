@@ -1,0 +1,22 @@
+#!/bin/bash
+
+TROFFONTS=/Users/rsc/sys/font/Adobe/TypeClassics/MinionProOpticals:/Users/rsc/sys/font/Adobe/TypeClassics/MyriadPro:/Users/rsc/sys/font/Adobe/TypeClassics/NewsGothicStd:/Users/rsc/sys/font/Misc:/Users/rsc/sys/font/Go
+GS_FONTPATH=$TROFFONTS:/usr/local/plan9/postscript/font
+
+case $# in
+2)
+	;;
+*)
+	echo 'usage: eps2png x.eps x.png' >&2
+	exit 2
+esac
+
+wid=$(grep '^%%Bounding' $1 | awk '{print $4}')
+ht=$(grep '^%%Bounding' $1 | awk '{print $5}')
+
+gs -q -dBATCH -dNOPAUSE -sDEVICE=png16m -r144 \
+   -dDEVICEWIDTHPOINTS=$wid -dDEVICEHEIGHTPOINTS=$ht -dFIXEDMEDIA \
+   -dTextAlphaBits=4 -dGraphicsAlphaBits=4 \
+   -sOutputFile=$2 $1
+
+
