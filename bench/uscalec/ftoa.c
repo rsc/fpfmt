@@ -145,9 +145,6 @@ uint64_t uint64pow10[] = {
 };
 
 void FixedWidth(double f, int n, uint64_t *dp, int *pp) {
-	if(n > 18)
-		abort();
-
 	uint64_t m;
 	int e;
 	unpack64(f, &m, &e);
@@ -170,27 +167,6 @@ static int bitsLen64(uint64_t x) {
 	return 64 - __builtin_clzll(x);
 }
 
-double xParse(uint64_t d, int p) {
-	if(d > (uint64_t)1e19)
-		abort();
-
-	int b = bitsLen64(d);
-	int lp = log2Pow10(p);
-	int e = 53 - b - lp;
-	if (e > 1074)
-		e = 1074;
-	unrounded u = uscale(d<<(64-b), prescale(e-(64-b), p, lp));
-	int adj = (u >= (1ULL<<55)-2);
-	u = (u>>adj) | u&1;
-	e -= adj;
-	uint64_t m = uround(u);
-	if ((m&(1ULL<<52)) != 0)
-		m = (m^(1ULL<<52)) | ((uint64_t)(1075-e)<<52);
-	double f;
-	memmove(&f, &m, sizeof f);
-	return f;
-}
-
 double pack64(uint64_t m, int e) {
 	if((m & (1ULL<<52)) != 0)
 		m = (m&~(1ULL<<52)) | ((uint64_t)(1075+e)<<52);
@@ -200,9 +176,6 @@ double pack64(uint64_t m, int e) {
 }
 
 double Parse(uint64_t d, int p) {
-	if(d > (uint64_t)1e19)
-		abort();
-
 	int b = bitsLen64(d);
 	int lp = log2Pow10(p);
 	int e = 53 - b - lp;
@@ -216,7 +189,7 @@ double Parse(uint64_t d, int p) {
 	return pack64(m, -e);
 }
 
-void ZZShort(double f, uint64_t *dp, int *pp) {
+static void Short(double f, uint64_t *dp, int *pp) {
 	uint64_t m;
 	int e;
 	unpack64(f, &m, &e);
@@ -351,14 +324,14 @@ static void fixed(char *dst, double f, int n) {
 static void short1(char *dst, double f) {
 	uint64_t d;
 	int p;
-	ZZShort(f, &d, &p);
+	Short(f, &d, &p);
 	Format(dst, d, p, countDigits(d));
 }
 
 static void shortRaw(uint64_t *dp, int64_t *pp, double f) {
 	uint64_t d;
 	int p;
-	ZZShort(f, &d, &p);
+	Short(f, &d, &p);
 	*dp = d;
 	*pp = p;
 }
