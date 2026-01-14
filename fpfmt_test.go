@@ -60,7 +60,6 @@ type parseRawFn struct {
 
 var fixeds = []fixedFn{
 	{"uscale", fixedLoop},
-	{"uscalet", fixedTruncLoop},
 	{"uscalec", uscalec.BenchFixed},
 	{"dmg1991", dmg.BenchFixed1991},
 	{"dmg1997", dmg.BenchFixed19970128},
@@ -91,7 +90,6 @@ var shorts = []shortFn{
 
 var shortRaws = []shortRawFn{
 	{"uscale", shortRawLoop},
-	{"uscalet", shortRawTruncLoop},
 	{"uscalec", uscalec.BenchShortRaw},
 	// {"schubfach", schubfach.BenchShortRaw},
 	{"dragonbox", dragonbox.BenchShortRaw},
@@ -127,15 +125,6 @@ func fixedLoop(dst []byte, count int, fs []float64, digits int) {
 	}
 }
 
-func fixedTruncLoop(dst []byte, count int, fs []float64, digits int) {
-	for range count {
-		for _, f := range fs {
-			d, p := FixedWidthTrunc(f, digits)
-			efmt(dst, d, p, digits)
-		}
-	}
-}
-
 func shortLoop(dst []byte, count int, fs []float64) {
 	for range count {
 		for _, f := range fs {
@@ -149,16 +138,6 @@ func shortRawLoop(dp *uint64, pp *int64, count int, fs []float64) {
 	for range count {
 		for _, f := range fs {
 			d, p := Short(f)
-			*dp = d
-			*pp = int64(p)
-		}
-	}
-}
-
-func shortRawTruncLoop(dp *uint64, pp *int64, count int, fs []float64) {
-	for range count {
-		for _, f := range fs {
-			d, p := ShortTrunc(f)
 			*dp = d
 			*pp = int64(p)
 		}
@@ -194,7 +173,7 @@ func parseRawLoop(count int, raw []int64) float64 {
 	return total
 }
 
-//go:embed test.ivy
+//go:embed unopt/testdata/test.ivy
 var testIvy string
 
 var ivyRE = regexp.MustCompile(`\(([0-9]+) ftoa ([^ ]+)\) is ([0-9]+) (-?[0-9]+)`)
@@ -425,10 +404,12 @@ func randParses() []byte {
 }
 
 func randParseRaws() []int64 {
+	var seed [32]byte
+	r := rand.New(rand.NewChaCha8(seed))
 	var raws []int64
 	for range 10000 {
-		n := rand.N(uint64(1e19))
-		p := rand.N(int64(600)) - 300
+		n := r.Uint64N(1e19)
+		p := r.Int64N(600) - 300
 		raws = append(raws, int64(n), p-18)
 	}
 	return raws
@@ -461,17 +442,16 @@ func BenchmarkParseRaw(b *testing.B) {
 var scatterFlag = flag.String("scatter", "", "write scatterplot data to `file`")
 
 var scatterReps = map[string]int{
-	"uscale":     10,
-	"uscalec":    10,
-	"uscalet":    10,
+	"uscale":     1,
+	"uscalec":    1,
 	"dmg1997":    1,
-	"dmg2017":    10,
-	"dblconv":    10,
-	"dragonbox":  10,
-	"ryu":        10,
+	"dmg2017":    1,
+	"dblconv":    1,
+	"dragonbox":  1,
+	"ryu":        1,
 	"libc":       1,
-	"fast_float": 10,
-	"abseil":     10,
+	"fast_float": 1,
+	"abseil":     1,
 }
 
 type scatterplot struct {
@@ -484,7 +464,7 @@ type scatterplot struct {
 	batch []float64
 }
 
-const TimeBatch = 10
+const TimeBatch = 25
 
 func newScatter(t *testing.T, scat, name string) *scatterplot {
 	if *scatterFlag == "" {
@@ -554,7 +534,7 @@ func TestScatterFixed(t *testing.T) {
 	var dst [1000]byte
 	for _, scat := range scatters {
 		t.Run("scatter="+scat, func(t *testing.T) {
-			for _, digits := range []int{2, 4, 8, 16, 17, 18} {
+			for _, digits := range []int{6, 17} { // 2, 4, 8, 16, 17, 18
 				t.Run(fmt.Sprintf("digits=%d", digits), func(t *testing.T) {
 					p := newScatter(t, scat, fmt.Sprintf("fixed%d", digits))
 					for _, impl := range fixeds {
@@ -1765,7 +1745,7 @@ var pow10Tests = []struct {
 func TestPow10(t *testing.T) {
 	for _, tt := range pow10Tests {
 		c := prescale(0, tt.p, log2Pow10(tt.p))
-		pm := pmHiLo{c.pmHi, c.pmLo}
+		pm := c.pm
 		pe := -(c.s + 2)
 		if pm != tt.pm || pe != tt.pe {
 			t.Errorf("pow10(%d) = %#x, %d, want %#x, %d", tt.p, pm, pe, tt.pm, tt.pe)
