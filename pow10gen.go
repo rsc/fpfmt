@@ -54,11 +54,10 @@ func main() {
 			be--
 		}
 		d := new(big.Int).Div(r.Num(), r.Denom())
-		rem := new(big.Int)
-		hi, lo := new(big.Int).DivMod(d, b1p64, rem)
+		hi, lo := new(big.Int).DivMod(d, b1p64, new(big.Int))
 		uhi := hi.Uint64()
 		ulo := lo.Uint64()
-		if rem.Uint64() != 0 {
+		if !r.IsInt() {
 			ulo++
 			if ulo == 0 {
 				uhi++
