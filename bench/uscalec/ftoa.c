@@ -229,7 +229,7 @@ static void Short(double f, uint64_t *dp, int *pp) {
 	*pp = -p;
 }
 
-static const char smalls[] = "00010203040506070809"
+static const char i2a[] = "00010203040506070809"
 	"10111213141516171819"
 	"20212223242526272829"
 	"30313233343536373839"
@@ -252,10 +252,10 @@ formatBase10(char *dst, uint64_t d64, int nd)
 		uint32_t x0 = (x % 100) * 2;
 		uint32_t y1 = (y / 100) * 2;
 		uint32_t y0 = (y % 100) * 2;
-		memmove(dst+nd-8, smalls+x1, 2);
-		memmove(dst+nd-6, smalls+x0, 2);
-		memmove(dst+nd-4, smalls+y1, 2);
-		memmove(dst+nd-2, smalls+y0, 2);
+		memmove(dst+nd-8, i2a+x1, 2);
+		memmove(dst+nd-6, i2a+x0, 2);
+		memmove(dst+nd-4, i2a+y1, 2);
+		memmove(dst+nd-2, i2a+y0, 2);
 		nd -= 8;
 	}
 
@@ -265,18 +265,18 @@ formatBase10(char *dst, uint64_t d64, int nd)
 		d /= 10000;
 		uint32_t x1 = (x / 100) * 2;
 		uint32_t x0 = (x % 100) * 2;
-		memmove(dst+nd-4, smalls+x1, 2);
-		memmove(dst+nd-2, smalls+x0, 2);
+		memmove(dst+nd-4, i2a+x1, 2);
+		memmove(dst+nd-2, i2a+x0, 2);
 		nd -= 4;
 	}
 	if(d >= 100) {
 		uint32_t x = d % 100;
 		d /= 100;
-		memmove(dst+nd-2, smalls+2*x, 2);
+		memmove(dst+nd-2, i2a+2*x, 2);
 		nd -= 2;
 	}
 	if(d >= 10) {
-		memmove(dst+nd-2, smalls+2*d, 2);
+		memmove(dst+nd-2, i2a+2*d, 2);
 		return;
 	}
 	dst[nd-1] = '0' + d;
@@ -304,12 +304,12 @@ void Format(char *dst, uint64_t d, int p, int nd) {
 		dst[n+1] = '+';
 	}
 	if (p < 100) {
-		memmove(dst+n+2, smalls+2*p, 2);
+		memmove(dst+n+2, i2a+2*p, 2);
 		dst[n+4] = 0;
 		return;
 	}
 	dst[n+2] = '0' + p/100;
-	memmove(dst+n+3, smalls+2*(p%100), 2);
+	memmove(dst+n+3, i2a+2*(p%100), 2);
 	dst[n+5] = 0;
 	return;
 }
@@ -336,24 +336,38 @@ static void shortRaw(uint64_t *dp, int64_t *pp, double f) {
 	*pp = p;
 }
 
+static int isDigit(char c) {
+	return (unsigned char)(c-'0') <= 9;
+}
+
 static double uscalecStrtod(char *s, char *e) {
+	// Read digits.
+	const int maxDigits = 19;
 	uint64_t d = 0;
-	int dp = 0;
+	int frac = 0;
 	int i = 0;
 	int len = e - s;
-	for(; i < len && s[i] != 'e'; i++) {
-		if(s[i] == '.') {
-			dp = i+1;
-			continue;
-		}
-		d = d*10+s[i] - '0';
-	}
-	if(dp > 0)
-		dp = i - dp;
-	int p = 0;
-	if(i < len) {
-		int sign = +1;
+	for(; i < len && isDigit(s[i]); i++)
+		d = d*10 + s[i] - '0';
+	if(i > maxDigits)
+		return 0;
+	if(i < len && s[i] == '.') {
 		i++;
+		for(; i < len && isDigit(s[i]); i++) {
+			d = d*10 + s[i] - '0';
+			frac++;
+		}
+		if(i == 1 || i > maxDigits+1)
+			return 0;
+	}
+	if(i == 0)
+		return 0;
+
+	// Read exponent.
+	int p = 0;
+	if(i < len && (s[i] == 'e' || s[i] == 'E')) {
+		i++;
+		int sign = +1;
 		if(i < len) {
 			if(s[i] == '-') {
 				sign = -1;
@@ -362,11 +376,15 @@ static double uscalecStrtod(char *s, char *e) {
 				i++;
 			}
 		}
-		for(; i < len; i++)
+		if(i >= len || len-i > 3)
+			return 0;
+		for(; i < len && isDigit(s[i]); i++)
 			p = p*10 + s[i] - '0';
 		p *= sign;
 	}
-	return Parse(d, p-dp);
+	if(i != len)
+		return 0;
+	return Parse(d, p-frac);
 }
 
 void uscalecBenchFixed(char *dst, int count, double *f, int nf, int digits) {

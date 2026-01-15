@@ -120,7 +120,7 @@ func fixedLoop(dst []byte, count int, fs []float64, digits int) {
 	for range count {
 		for _, f := range fs {
 			d, p := FixedWidth(f, digits)
-			efmt(dst, d, p, digits)
+			Fmt(dst, d, p, digits)
 		}
 	}
 }
@@ -129,7 +129,7 @@ func shortLoop(dst []byte, count int, fs []float64) {
 	for range count {
 		for _, f := range fs {
 			d, p := Short(f)
-			efmt(dst, d, p, countDigits(d))
+			Fmt(dst, d, p, Digits(d))
 		}
 	}
 }
@@ -151,7 +151,8 @@ func parseLoop(count int, text []byte) float64 {
 		start := 0
 		for i, c := range text {
 			if c == '\x00' || c == '\n' {
-				total += parseText(text[start:i])
+				f, _ := ParseText(text[start:i])
+				total += f
 				if c == '\x00' {
 					break
 				}
@@ -190,7 +191,7 @@ func TestFixedWidth(t *testing.T) {
 					continue
 				}
 				floats[0] = tt.f
-				want := want[:efmt(want[:], tt.d, tt.p, tt.n)]
+				want := want[:Fmt(want[:], tt.d, tt.p, tt.n)]
 				if impl.name == "dblconv" {
 					if w, ok := roundHalfUp[string(want)]; ok {
 						want = []byte(w)
@@ -263,7 +264,7 @@ func TestShortRaw(t *testing.T) {
 				want := strconv.FormatFloat(f, 'e', -1, 64)
 				clear(have[:])
 				impl.fn(&d, &p, 1, floats[:])
-				have := have[:efmt(have[:], d, int(p), countDigits(d))]
+				have := have[:Fmt(have[:], d, int(p), Digits(d))]
 				if string(have) != want {
 					t.Fatalf("shortRaw(%#x) = %s want %s", f, have, want)
 					if fail++; fail >= 100 {

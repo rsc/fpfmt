@@ -31,7 +31,7 @@ func unpack64(f float64) (uint64, int) {
 		m &^= 1 << 63
 		e = minExp
 		s := 64 - bits.Len64(m)
-		return m<<s, e-s
+		return m << s, e - s
 	}
 	return m, (e - 1) + minExp
 }
@@ -132,24 +132,42 @@ func unmin(x uint64) unrounded {
 	return unrounded(x<<2 - 2)
 }
 
-func parseText(s []byte) float64 {
-	d := uint64(0)
-	dp := 0
+// ParseText parses a decimal string s
+// and returns the nearest floating point value.
+// It returns 0, false if the input s is malformed.
+func ParseText(s []byte) (f float64, ok bool) {
+	isDigit := func(c byte) bool { return c-'0' <= 9 }
+
+	// Read digits.
+	const maxDigits = 19
+	d := uint64(0) // decimal value of digits
+	frac := 0      // count of digits after decimal point
 	i := 0
-	for ; i < len(s) && s[i] != 'e'; i++ {
-		if s[i] == '.' {
-			dp = i + 1
-			continue
-		}
+	for ; i < len(s) && isDigit(s[i]); i++ {
 		d = d*10 + uint64(s[i]) - '0'
 	}
-	if dp > 0 {
-		dp = i - dp
+	if i > maxDigits {
+		return // too many digits
 	}
-	p := 0
-	if i < len(s) {
-		sign := +1
+	if i < len(s) && s[i] == '.' {
 		i++
+		for ; i < len(s) && isDigit(s[i]); i++ {
+			d = d*10 + uint64(s[i]) - '0'
+			frac++
+		}
+		if i == 1 || i > maxDigits+1 {
+			return // no digits or too many digits
+		}
+	}
+	if i == 0 {
+		return // no digits
+	}
+
+	// Read exponent.
+	p := 0
+	if i < len(s) && (s[i] == 'e' || s[i] == 'E') {
+		i++
+		sign := +1
 		if i < len(s) {
 			if s[i] == '-' {
 				sign = -1
@@ -158,15 +176,18 @@ func parseText(s []byte) float64 {
 				i++
 			}
 		}
-		for ; i < len(s); i++ {
+		if i >= len(s) || len(s)-i > 3 {
+			return // missing or too large exponent
+		}
+		for ; i < len(s) && isDigit(s[i]); i++ {
 			p = p*10 + int(s[i]) - '0'
 		}
 		p *= sign
 	}
-	if d > 1e19 {
-		println("PARSE", s, d)
+	if i != len(s) {
+		return // junk on end
 	}
-	return Parse(d, p-dp)
+	return Parse(d, p-frac), true
 }
 
 // Short computes the shortest formatting of f,
@@ -261,7 +282,7 @@ type pmHiLo struct {
 // A scalers...
 type scalers struct {
 	pm pmHiLo
-	s    int
+	s  int
 }
 
 // prescale
@@ -287,34 +308,43 @@ func uscale(x uint64, c scalers) unrounded {
 	return unrounded(hi>>c.s | sticky)
 }
 
-func efmt(dst []byte, dm uint64, dp int, nd int) int {
-	formatBase10(dst[1:nd+1], dm)
-	dp += nd - 1
-	dst[0] = dst[1]
+// Fmt formats d, p into s in exponential notation.
+// The caller must pass nd set to the number of digits in d.
+// It returns the number of bytes written to s.
+func Fmt(s []byte, d uint64, p, nd int) int {
+	// Put digits into s, leaving room for decimal point.
+	formatBase10(s[1:nd+1], d)
+	p += nd - 1
+
+	// Move first digit up and insert decimal point.
+	s[0] = s[1]
 	n := nd
 	if n > 1 {
-		dst[1] = '.'
+		s[1] = '.'
 		n++
 	}
-	dst[n] = 'e'
-	if dp < 0 {
-		dst[n+1] = '-'
-		dp = -dp
+
+	// Add 2- or 3-digit exponent.
+	s[n] = 'e'
+	if p < 0 {
+		s[n+1] = '-'
+		p = -p
 	} else {
-		dst[n+1] = '+'
+		s[n+1] = '+'
 	}
-	if dp < 100 {
-		dst[n+2] = smalls[dp*2]
-		dst[n+3] = smalls[dp*2+1]
+	if p < 100 {
+		s[n+2] = i2a[p*2]
+		s[n+3] = i2a[p*2+1]
 		return n + 4
 	}
-	dst[n+2] = byte('0' + dp/100)
-	dst[n+3] = smalls[(dp%100)*2]
-	dst[n+4] = smalls[(dp%100)*2+1]
+	s[n+2] = byte('0' + p/100)
+	s[n+3] = i2a[(p%100)*2]
+	s[n+4] = i2a[(p%100)*2+1]
 	return n + 5
 }
 
-func countDigits(d uint64) int {
+// Digits returns the number of decimal digits in d.
+func Digits(d uint64) int {
 	nd := log10Pow2(bits.Len64(d))
 	return nd + bool2[int](d >= uint64pow10[nd])
 }
@@ -325,20 +355,20 @@ func AppendFloat(dst []byte, f float64, fmt byte, prec, bitSize int) []byte {
 	var p, nd int
 	if prec < 0 {
 		d, p = Short(f)
-		nd = countDigits(d)
+		nd = Digits(d)
 	} else {
 		d, p = FixedWidth(f, prec)
 		nd = prec
 	}
-	i := efmt(buf[:], d, p, nd)
+	i := Fmt(buf[:], d, p, nd)
 	return append(dst, buf[:i]...)
 }
 
 const host64bit = bits.UintSize == 64
 
-// smalls is the formatting of 00..99 concatenated,
+// i2a is the formatting of 00..99 concatenated,
 // a lookup table for formatting [0, 99].
-const smalls = "00010203040506070809" +
+const i2a = "00010203040506070809" +
 	"10111213141516171819" +
 	"20212223242526272829" +
 	"30313233343536373839" +
@@ -354,47 +384,39 @@ const smalls = "00010203040506070809" +
 // If a is too big, leading zeros will be filled in as needed.
 func formatBase10(a []byte, u uint64) {
 	nd := len(a)
-	for nd >= 9 {
-		// Format last 8 digits (4 pairs) in 32-bit math.
+	for nd >= 8 {
+		// Format last 8 digits (4 pairs).
 		x3210 := uint32(u % 1e8)
 		u /= 1e8
-		x32, x10 := x3210 / 1e4, x3210 % 1e4
+		x32, x10 := x3210/1e4, x3210%1e4
 		x1, x0 := (x10/100)*2, (x10%100)*2
 		x3, x2 := (x32/100)*2, (x32%100)*2
-		a[nd-1] = smalls[x0+1]
-		a[nd-2] = smalls[x0]
-		a[nd-3] = smalls[x1+1]
-		a[nd-4] = smalls[x1]
-		a[nd-5] = smalls[x2+1]
-		a[nd-6] = smalls[x2]
-		a[nd-7] = smalls[x3+1]
-		a[nd-8] = smalls[x3]
+		a[nd-1], a[nd-2] = i2a[x0+1], i2a[x0]
+		a[nd-3], a[nd-4] = i2a[x1+1], i2a[x1]
+		a[nd-5], a[nd-6] = i2a[x2+1], i2a[x2]
+		a[nd-7], a[nd-8] = i2a[x3+1], i2a[x3]
 		nd -= 8
 	}
 
 	x := uint32(u)
-	for nd >= 5 {
+	if nd >= 4 {
 		// Format last 4 digits (2 pairs).
 		x10 := x % 1e4
 		x /= 1e4
 		x1, x0 := (x10/100)*2, (x10%100)*2
-		a[nd-1] = smalls[x0+1]
-		a[nd-2] = smalls[x0]
-		a[nd-3] = smalls[x1+1]
-		a[nd-4] = smalls[x1]
+		a[nd-1], a[nd-2] = i2a[x0+1], i2a[x0]
+		a[nd-3], a[nd-4] = i2a[x1+1], i2a[x1]
 		nd -= 4
 	}
-	if nd >= 3 {
+	if nd >= 2 {
+		// Format last 2 digits.
 		x0 := (x % 1e2) * 2
 		x /= 1e2
-		a[nd-1] = smalls[x0+1]
-		a[nd-2] = smalls[x0]
+		a[nd-1], a[nd-2] = i2a[x0+1], i2a[x0]
 		nd -= 2
 	}
-	if nd >= 2 && x < 100 {  // x < 100 always true but removes bounds checks
-		a[nd-1] = smalls[x*2+1]
-		a[nd-2] = smalls[x*2]
-		return
+	if nd > 0 {
+		// Format final digit.
+		a[0] = byte('0' + x)
 	}
-	a[0] = byte('0' + x)
 }
