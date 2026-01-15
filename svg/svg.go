@@ -424,11 +424,14 @@ func (g *Graph) epsInner() string {
 	// Set up clipping region for data box to prevent scatter points from covering axes
 	fmt.Fprintf(&buf, "gsave\n")
 	fmt.Fprintf(&buf, "newpath\n")
-	fmt.Fprintf(&buf, "%.3f %.3f M\n", float64(g.DBox.Min.X), g.flipY(float64(g.DBox.Max.Y)))
-	fmt.Fprintf(&buf, "%.3f %.3f L\n", float64(g.DBox.Max.X), g.flipY(float64(g.DBox.Max.Y)))
-	fmt.Fprintf(&buf, "%.3f %.3f L\n", float64(g.DBox.Max.X), g.flipY(float64(g.DBox.Min.Y)))
-	fmt.Fprintf(&buf, "%.3f %.3f L\n", float64(g.DBox.Min.X), g.flipY(float64(g.DBox.Min.Y)))
-	fmt.Fprintf(&buf, "closepath clip newpath\n\n")
+
+	if false {
+		fmt.Fprintf(&buf, "%.3f %.3f M\n", float64(g.DBox.Min.X), g.flipY(float64(g.DBox.Max.Y)))
+		fmt.Fprintf(&buf, "%.3f %.3f L\n", float64(g.DBox.Max.X), g.flipY(float64(g.DBox.Max.Y)))
+		fmt.Fprintf(&buf, "%.3f %.3f L\n", float64(g.DBox.Max.X), g.flipY(float64(g.DBox.Min.Y)))
+		fmt.Fprintf(&buf, "%.3f %.3f L\n", float64(g.DBox.Min.X), g.flipY(float64(g.DBox.Min.Y)))
+		fmt.Fprintf(&buf, "closepath clip newpath\n\n")
+	}
 
 	// Process path elements (scatter and line data) - these should be clipped
 	s2 := g.inner
