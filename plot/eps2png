@@ -14,7 +14,7 @@ esac
 wid=$(grep '^%%Bounding' $1 | awk '{print $4}')
 ht=$(grep '^%%Bounding' $1 | awk '{print $5}')
 
-gs -q -dBATCH -dNOPAUSE -sDEVICE=png16m -r144 \
+gs -q -dBATCH -dNOPAUSE -sDEVICE=png16m -r432 \
    -dDEVICEWIDTHPOINTS=$wid -dDEVICEHEIGHTPOINTS=$ht -dFIXEDMEDIA \
    -dTextAlphaBits=4 -dGraphicsAlphaBits=4 \
    -sOutputFile=$2 $1

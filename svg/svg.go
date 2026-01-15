@@ -328,7 +328,8 @@ func (g *Graph) drawBBox() {
 	g.inner += g.elem("path", g.attrs("class", "bbox", "d", path.String()), "")
 }
 
-func (g *Graph) SVG() string {
+func (g *Graph) draw() {
+	g.inner = ""
 	for _, s := range g.Scatters {
 		g.drawScatter(s)
 	}
@@ -337,35 +338,40 @@ func (g *Graph) SVG() string {
 	}
 	g.drawLegend()
 	g.drawAxes()
+}
+
+func (g *Graph) svg(big bool) string {
+	g.draw()
 	//g.drawBBox()
+	w := g.BBox.Dx()
+	h := g.BBox.Dy()
+	inner := g.inner
+	if big {
+		w *= 2
+		h *= 2
+		inner = g.elem("g", g.attrs("transform", "scale(2)"), inner)
+	}
 	return svgHeader + g.elem("svg",
 		g.attrs(
-			"width", g.BBox.Dx(),
-			"height", g.BBox.Dy(),
+			"width", w,
+			"height", h,
 			"version", "1.1",
 			"xmlns", "http://www.w3.org/2000/svg",
 		),
-		"<defs><style type='text/css'><![CDATA["+g.Style+"]]></style></defs>"+g.inner,
+		"<defs><style type='text/css'><![CDATA["+g.Style+"]]></style></defs>"+inner,
 	)
 }
+
+func (g *Graph) BigSVG() string { return g.svg(true) }
+func (g *Graph) SVG() string    { return g.svg(false) }
 
 const svgHeader = `<?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 `
 
 func (g *Graph) EPS() string {
-	for _, s := range g.Scatters {
-		g.drawScatter(s)
-	}
-	for _, l := range g.Lines {
-		g.drawLine(l)
-	}
-	g.drawLegend()
-	g.drawAxes()
-	g.drawBBox()
-
+	g.draw()
 	var buf bytes.Buffer
-
 	// EPS header
 	fmt.Fprintf(&buf, "%%!PS-Adobe-3.0 EPSF-3.0\n")
 	fmt.Fprintf(&buf, "%%%%BoundingBox: %d %d %d %d\n", g.BBox.Min.X, g.BBox.Min.Y, g.BBox.Max.X, g.BBox.Max.Y)
@@ -422,7 +428,7 @@ func (g *Graph) epsInner() string {
 	fmt.Fprintf(&buf, "%.3f %.3f L\n", float64(g.DBox.Max.X), g.flipY(float64(g.DBox.Max.Y)))
 	fmt.Fprintf(&buf, "%.3f %.3f L\n", float64(g.DBox.Max.X), g.flipY(float64(g.DBox.Min.Y)))
 	fmt.Fprintf(&buf, "%.3f %.3f L\n", float64(g.DBox.Min.X), g.flipY(float64(g.DBox.Min.Y)))
-	fmt.Fprintf(&buf, "closepath clip\n\n")
+	fmt.Fprintf(&buf, "closepath clip newpath\n\n")
 
 	// Process path elements (scatter and line data) - these should be clipped
 	s2 := g.inner
@@ -863,7 +869,7 @@ func EPSToPNGs(basename string, eps []byte, width, height int) (map[string][]byt
 	}
 
 	for _, s := range scales {
-		dpi := int(72 * s.scale)
+		dpi := int(108 * s.scale)
 
 		// Create temporary output file
 		tmpPNG, err := os.CreateTemp("", "*.png")

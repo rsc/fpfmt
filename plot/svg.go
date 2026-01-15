@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build ignore
-
 package main
 
 import (
@@ -35,14 +33,14 @@ var graphs = []struct {
 	{"linux-ryzen.out", "fpfmt-ryzen-fixed17", "fixed17", "Fmt(FixedWidth(f, 17)) [Linux, AMD Ryzen 9]"},
 	{"linux-ryzen.out", "fpfmt-ryzen-short", "short", "Fmt(Short(f)) [Linux, AMD Ryzen 9]"},
 	{"linux-ryzen.out", "fpfmt-ryzen-shortraw", "shortraw", "Short(f) [Linux, AMD Ryzen 9]"},
-	{"linux-ryzen.out", "fpfmt-ryzen-parse", "parse", "Parse(Unfmt(s)) [Linux, AMD Ryzen 9]"},
+	{"linux-ryzen.out", "fpfmt-ryzen-parse", "parse", "ParseText(s) [Linux, AMD Ryzen 9]"},
 	{"linux-ryzen.out", "fpfmt-ryzen-parseraw", "parseraw", "Parse(d, p) [Linux, AMD Ryzen 9]"},
 
 	{"darwin-m4.out", "fpfmt-apple-fixed6", "fixed6", "Fmt(FixedWidth(f, 6)) [macOS, Apple M4]"},
 	{"darwin-m4.out", "fpfmt-apple-fixed17", "fixed17", "Fmt(FixedWidth(f, 17)) [macOS, Apple M4]"},
 	{"darwin-m4.out", "fpfmt-apple-short", "short", "Fmt(Short(f)) [macOS, Apple M4]"},
 	{"darwin-m4.out", "fpfmt-apple-shortraw", "shortraw", "Short(f) [macOS, Apple M4]"},
-	{"darwin-m4.out", "fpfmt-apple-parse", "parse", "Parse(Unfmt(s)) [macOS, Apple M4]"},
+	{"darwin-m4.out", "fpfmt-apple-parse", "parse", "ParseText(s) [macOS, Apple M4]"},
 	{"darwin-m4.out", "fpfmt-apple-parseraw", "parseraw", "Parse(d, p) [macOS, Apple M4]"},
 }
 
@@ -70,24 +68,7 @@ func main() {
 			data = load(gg.data)
 			lastData = gg.data
 		}
-		svgOut, epsOut := cdf(data, algs, gg.op, gg.title)
-		if err := os.WriteFile(gg.svg+"-cdf.svg", []byte(svgOut), 0666); err != nil {
-			log.Fatal(err)
-		}
-		if err := os.WriteFile(gg.svg+"-cdf.eps", []byte(epsOut), 0666); err != nil {
-			log.Fatal(err)
-		}
-		if *png {
-			pngs, err := svg.EPSToPNGs(gg.svg+"-cdf", []byte(epsOut), 400, 300)
-			if err != nil {
-				log.Fatal(err)
-			}
-			for filename, data := range pngs {
-				if err := os.WriteFile(filename, data, 0666); err != nil {
-					log.Fatal(err)
-				}
-			}
-		}
+		writeGraphs(gg.svg+"-cdf", cdf(data, algs, gg.op, gg.title))
 	}
 
 	algs = []string{"libc", "dblconv", "dmg1997", "dmg2017", "ryu", "dragonbox", "abseil", "fast_float", "uscale", "uscalec"}
@@ -99,29 +80,35 @@ func main() {
 			data = load(gg.data)
 			lastData = gg.data
 		}
-		svgOut, epsOut := scatter(data, algs, gg.op, gg.title)
-		if err := os.WriteFile(gg.svg+"-scat.svg", []byte(svgOut), 0666); err != nil {
+		writeGraphs(gg.svg+"-scat", scatter(data, algs, gg.op, gg.title))
+	}
+}
+
+func writeGraphs(name string, g *svg.Graph) {
+	if err := os.WriteFile(name+".svg", []byte(g.SVG()), 0666); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.WriteFile(name+"-big.svg", []byte(g.BigSVG()), 0666); err != nil {
+		log.Fatal(err)
+	}
+	eps := []byte(g.EPS())
+	if err := os.WriteFile(name+".eps", eps, 0666); err != nil {
+		log.Fatal(err)
+	}
+	if *png {
+		pngs, err := svg.EPSToPNGs(name, eps, g.BBox.Dx(), g.BBox.Dy())
+		if err != nil {
 			log.Fatal(err)
 		}
-		if err := os.WriteFile(gg.svg+"-scat.eps", []byte(epsOut), 0666); err != nil {
-			log.Fatal(err)
-		}
-		if *png {
-			pngs, err := svg.EPSToPNGs(gg.svg+"-scat", []byte(epsOut), 600, 300)
-			if err != nil {
+		for file, data := range pngs {
+			if err := os.WriteFile(file, data, 0666); err != nil {
 				log.Fatal(err)
-			}
-			for filename, data := range pngs {
-				if err := os.WriteFile(filename, data, 0666); err != nil {
-					log.Fatal(err)
-				}
 			}
 		}
 	}
-
 }
 
-func cdf(data []Mark, algs []string, op, title string) (string, string) {
+func cdf(data []Mark, algs []string, op, title string) *svg.Graph {
 	const (
 		Width  = 400
 		Height = 300
@@ -196,10 +183,10 @@ func cdf(data []Mark, algs []string, op, title string) (string, string) {
 	g.Y.Max = 1
 	g.Y.AutoScale()
 	g.X.AutoTimeLogScale(g)
-	return g.SVG(), g.EPS()
+	return g
 }
 
-func scatter(data []Mark, algs []string, op, title string) (string, string) {
+func scatter(data []Mark, algs []string, op, title string) *svg.Graph {
 	const (
 		Width  = 600
 		Height = 300
@@ -262,7 +249,7 @@ func scatter(data []Mark, algs []string, op, title string) (string, string) {
 		total[s.Name] += y
 	}
 	if g.Y.Max < g.Y.Min {
-		return "", ""
+		return nil
 	}
 
 	sort.Slice(g.Scatters, func(i, j int) bool {
@@ -270,7 +257,7 @@ func scatter(data []Mark, algs []string, op, title string) (string, string) {
 	})
 
 	g.Y.AutoTimeLogScale(g)
-	return g.SVG(), g.EPS()
+	return g
 }
 
 type Mark struct {
