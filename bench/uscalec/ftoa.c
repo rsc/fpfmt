@@ -55,7 +55,7 @@ static void trimZeros(uint64_t x, int p, uint64_t *xp, int *pp) {
 
 void unpack64(double f, uint64_t *mp, int *ep) {
 	uint64_t b;
-	memmove(&b, &f, sizeof f);
+	memcpy(&b, &f, sizeof f);
 	uint64_t m = (b&((1ULL<<52)-1))<<11;
 	int e = ((b>>52)&((1<<11)-1)) - 1086;
 	if (e == -1086) {
@@ -171,7 +171,7 @@ double pack64(uint64_t m, int e) {
 	if((m & (1ULL<<52)) != 0)
 		m = (m&~(1ULL<<52)) | ((uint64_t)(1075+e)<<52);
 	double f;
-	memmove(&f, &m, sizeof f);
+	memcpy(&f, &m, sizeof f);
 	return f;
 }
 
@@ -252,10 +252,10 @@ formatBase10(char *dst, uint64_t d64, int nd)
 		uint32_t x0 = (x % 100) * 2;
 		uint32_t y1 = (y / 100) * 2;
 		uint32_t y0 = (y % 100) * 2;
-		memmove(dst+nd-8, i2a+x1, 2);
-		memmove(dst+nd-6, i2a+x0, 2);
-		memmove(dst+nd-4, i2a+y1, 2);
-		memmove(dst+nd-2, i2a+y0, 2);
+		memcpy(dst+nd-8, i2a+x1, 2);
+		memcpy(dst+nd-6, i2a+x0, 2);
+		memcpy(dst+nd-4, i2a+y1, 2);
+		memcpy(dst+nd-2, i2a+y0, 2);
 		nd -= 8;
 	}
 
@@ -265,18 +265,18 @@ formatBase10(char *dst, uint64_t d64, int nd)
 		d /= 10000;
 		uint32_t x1 = (x / 100) * 2;
 		uint32_t x0 = (x % 100) * 2;
-		memmove(dst+nd-4, i2a+x1, 2);
-		memmove(dst+nd-2, i2a+x0, 2);
+		memcpy(dst+nd-4, i2a+x1, 2);
+		memcpy(dst+nd-2, i2a+x0, 2);
 		nd -= 4;
 	}
 	if(d >= 100) {
 		uint32_t x = d % 100;
 		d /= 100;
-		memmove(dst+nd-2, i2a+2*x, 2);
+		memcpy(dst+nd-2, i2a+2*x, 2);
 		nd -= 2;
 	}
 	if(d >= 10) {
-		memmove(dst+nd-2, i2a+2*d, 2);
+		memcpy(dst+nd-2, i2a+2*d, 2);
 		return;
 	}
 	dst[nd-1] = '0' + d;
@@ -304,12 +304,12 @@ void Format(char *dst, uint64_t d, int p, int nd) {
 		dst[n+1] = '+';
 	}
 	if (p < 100) {
-		memmove(dst+n+2, i2a+2*p, 2);
+		memcpy(dst+n+2, i2a+2*p, 2);
 		dst[n+4] = 0;
 		return;
 	}
 	dst[n+2] = '0' + p/100;
-	memmove(dst+n+3, i2a+2*(p%100), 2);
+	memcpy(dst+n+3, i2a+2*(p%100), 2);
 	dst[n+5] = 0;
 	return;
 }
