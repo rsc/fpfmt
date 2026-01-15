@@ -3,3 +3,6 @@ py/__pycache__
 plot/*.svg
 plot/*.out
 plot/svg.html
+plot/png.html
+plot/*.png
+plot/*.eps
