@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdint.h>
+#include <string.h>
 #include <string>
 
 typedef unsigned char byte;
@@ -561,7 +563,7 @@ public:
         See section 9.4 of [1].
          */
         int64 cmp = vb - ((s + t) << 1);
-        return toChars(cmp < 0 || cmp == 0 && (s & 0x1) == 0 ? s : t, k + dk);
+        return toChars(cmp < 0 || (cmp == 0 && (s & 0x1) == 0) ? s : t, k + dk);
     }
 
     int toDecimalRaw(int q, int64 c, int dk, uint64_t *dp, int64_t *pp) {
@@ -659,7 +661,7 @@ public:
         See section 9.4 of [1].
          */
         int64 cmp = vb - ((s + t) << 1);
-        *dp = cmp < 0 || cmp == 0 && (s & 0x1) == 0 ? s : t;
+        *dp = cmp < 0 || (cmp == 0 && (s & 0x1) == 0) ? s : t;
         *pp = k + dk;
         return 0;
     }
