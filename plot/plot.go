@@ -14,8 +14,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
-	"rsc.io/fpfmt/svg"
 )
 
 var (
@@ -59,7 +57,7 @@ func main() {
 	var data []Mark
 	lastData := ""
 
-	algs := []string{"uscale", "uscalec", "fast_float", "abseil", "ryu", "dragonbox", "go125", "dmg2017", "dmg1997", "dblconv", "libc"}
+	algs := []string{"uscale", "uscalec", "fast_float", "abseil", "ryu", "dragonbox", "go125", "dmg2017", "dmg1997", "dblconv", "libc", "schubfach"}
 	for _, gg := range graphs {
 		if graphRE != nil && !graphRE.MatchString(gg.svg) {
 			continue
@@ -71,7 +69,7 @@ func main() {
 		writeGraphs(gg.svg+"-cdf", cdf(data, algs, gg.op, gg.title))
 	}
 
-	algs = []string{"libc", "dblconv", "dmg1997", "dmg2017", "ryu", "dragonbox", "abseil", "fast_float", "uscale", "uscalec"}
+	algs = []string{"libc", "dblconv", "dmg1997", "dmg2017", "ryu", "dragonbox", "abseil", "fast_float", "uscale", "uscalec", "schubfach"}
 	for _, gg := range graphs {
 		if graphRE != nil && !graphRE.MatchString(gg.svg) {
 			continue
@@ -84,7 +82,10 @@ func main() {
 	}
 }
 
-func writeGraphs(name string, g *svg.Graph) {
+func writeGraphs(name string, g *Graph) {
+	if g == nil {
+		return
+	}
 	if err := os.WriteFile(name+".svg", []byte(g.SVG()), 0666); err != nil {
 		log.Fatal(err)
 	}
@@ -96,7 +97,7 @@ func writeGraphs(name string, g *svg.Graph) {
 		log.Fatal(err)
 	}
 	if *png {
-		pngs, err := svg.EPSToPNGs(name, eps, g.BBox.Dx(), g.BBox.Dy())
+		pngs, err := EPSToPNGs(name, eps, g.BBox.Dx(), g.BBox.Dy())
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -108,13 +109,13 @@ func writeGraphs(name string, g *svg.Graph) {
 	}
 }
 
-func cdf(data []Mark, algs []string, op, title string) *svg.Graph {
+func cdf(data []Mark, algs []string, op, title string) *Graph {
 	const (
 		Width  = 400
 		Height = 300
 	)
-	g := &svg.Graph{
-		Style: svg.Style,
+	g := &Graph{
+		Style: Style,
 		BBox:  image.Rect(0, 0, Width, Height),
 		DBox:  image.Rect(65, 40, Width-20, Height-50),
 		Title: title,
@@ -126,9 +127,9 @@ func cdf(data []Mark, algs []string, op, title string) *svg.Graph {
 	g.LegendX = Width - 120
 	g.LegendY = 60
 
-	byAlg := make(map[string]*svg.Line)
+	byAlg := make(map[string]*Line)
 	for _, alg := range algs {
-		l := &svg.Line{Name: alg}
+		l := &Line{Name: alg}
 		byAlg[alg] = l
 		g.Lines = append(g.Lines, l)
 	}
@@ -139,7 +140,7 @@ func cdf(data []Mark, algs []string, op, title string) *svg.Graph {
 			continue
 		}
 		x := m.T
-		l.Points = append(l.Points, svg.Point{x, 0})
+		l.Points = append(l.Points, Point{x, 0})
 		g.X.Min = min(g.X.Min, x)
 		g.X.Max = max(g.X.Max, x)
 	}
@@ -156,7 +157,7 @@ func cdf(data []Mark, algs []string, op, title string) *svg.Graph {
 		}
 		const N = 1000
 		if len(l.Points) > 2*N {
-			trim := make([]svg.Point, N+1)
+			trim := make([]Point, N+1)
 			for i := range N + 1 {
 				trim[i] = l.Points[(len(l.Points)-1)*i/N]
 			}
@@ -168,7 +169,7 @@ func cdf(data []Mark, algs []string, op, title string) *svg.Graph {
 		}
 	}
 
-	key := func(l *svg.Line) float64 {
+	key := func(l *Line) float64 {
 		if len(l.Points) == 0 {
 			return 0
 		}
@@ -186,13 +187,13 @@ func cdf(data []Mark, algs []string, op, title string) *svg.Graph {
 	return g
 }
 
-func scatter(data []Mark, algs []string, op, title string) *svg.Graph {
+func scatter(data []Mark, algs []string, op, title string) *Graph {
 	const (
 		Width  = 600
 		Height = 300
 	)
-	g := &svg.Graph{
-		Style:   svg.Style,
+	g := &Graph{
+		Style:   Style,
 		LegendX: Width - 95,
 		LegendY: 60,
 		BBox:    image.Rect(0, 0, Width, Height),
@@ -203,7 +204,7 @@ func scatter(data []Mark, algs []string, op, title string) *svg.Graph {
 	g.Y.Title = "Time"
 	g.X.Min = -1024
 	g.X.Max = +1024
-	g.X.Ticks = []svg.Tick{
+	g.X.Ticks = []Tick{
 		{At: -1000, Label: "−1000"},
 		{At: -900},
 		{At: -800},
@@ -230,9 +231,9 @@ func scatter(data []Mark, algs []string, op, title string) *svg.Graph {
 	g.Y.Max = math.Inf(-1)
 
 	total := make(map[string]float64)
-	byAlg := make(map[string]*svg.Scatter)
+	byAlg := make(map[string]*Scatter)
 	for _, alg := range algs {
-		s := &svg.Scatter{Name: alg}
+		s := &Scatter{Name: alg}
 		byAlg[alg] = s
 		g.Scatters = append(g.Scatters, s)
 	}
@@ -243,7 +244,7 @@ func scatter(data []Mark, algs []string, op, title string) *svg.Graph {
 			continue
 		}
 		y := float64(m.T)
-		s.Points = append(s.Points, svg.Point{math.Log2(m.F), y})
+		s.Points = append(s.Points, Point{math.Log2(m.F), y})
 		g.Y.Min = min(g.Y.Min, y)
 		g.Y.Max = max(g.Y.Max, y)
 		total[s.Name] += y
