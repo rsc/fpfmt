@@ -12,6 +12,7 @@ import (
 	"math/bits"
 )
 
+// bool2 converts b to an integer: 1 for true, 0 for false.
 func bool2[T ~int | ~uint64](b bool) T {
 	if b {
 		return 1
@@ -23,10 +24,11 @@ func bool2[T ~int | ~uint64](b bool) T {
 // The caller is expected to have handled 0, NaN, and ±Inf already.
 // To unpack a float32 f, use unpack64(float64(f)).
 func unpack64(f float64) (uint64, int) {
-	const minExp = -1085
+	const shift = 64 - 53
+	const minExp = -(1074 + shift)
 	b := math.Float64bits(f)
-	m := 1<<63 | (b&(1<<52-1))<<(63-52)
-	e := int((b >> 52) & (1<<(63-52) - 1))
+	m := 1<<63 | (b&(1<<52-1))<<shift
+	e := int((b >> 52) & (1<<shift - 1))
 	if e == 0 {
 		m &^= 1 << 63
 		e = minExp
@@ -43,9 +45,10 @@ func pack64(m uint64, e int) float64 {
 	if m&(1<<52) == 0 {
 		return math.Float64frombits(m)
 	}
-	return math.Float64frombits((m &^ (1 << 52)) | uint64(1075+e)<<52)
+	return math.Float64frombits(m&^(1<<52) | uint64(1075+e)<<52)
 }
 
+// An unrounded represents an unrounded value.
 type unrounded uint64
 
 func unround(x float64) unrounded {
@@ -56,20 +59,20 @@ func (u unrounded) String() string {
 	return fmt.Sprintf("⟨%d.%d%s⟩", u>>2, 5*((u>>1)&1), "+"[1-u&1:])
 }
 
-func (r unrounded) floor() uint64         { return uint64((r + 0) >> 2) }
-func (r unrounded) roundHalfDown() uint64 { return uint64((r + 1) >> 2) }
-func (r unrounded) round() uint64         { return uint64((r + 1 + (r>>2)&1) >> 2) }
-func (r unrounded) roundHalfUp() uint64   { return uint64((r + 2) >> 2) }
-func (r unrounded) ceil() uint64          { return uint64((r + 3) >> 2) }
-func (r unrounded) nudge(δ int) unrounded { return r + unrounded(δ) }
+func (u unrounded) floor() uint64         { return uint64((u + 0) >> 2) }
+func (u unrounded) roundHalfDown() uint64 { return uint64((u + 1) >> 2) }
+func (u unrounded) round() uint64         { return uint64((u + 1 + (u>>2)&1) >> 2) }
+func (u unrounded) roundHalfUp() uint64   { return uint64((u + 2) >> 2) }
+func (u unrounded) ceil() uint64          { return uint64((u + 3) >> 2) }
+func (u unrounded) nudge(δ int) unrounded { return u + unrounded(δ) }
 
-func (r unrounded) div(d uint64) unrounded {
-	u := uint64(r)
-	return unrounded(u/d) | r&1 | bool2[unrounded](u%d != 0)
+func (u unrounded) div(d uint64) unrounded {
+	x := uint64(u)
+	return unrounded(x/d) | u&1 | bool2[unrounded](x%d != 0)
 }
 
-func (r unrounded) rsh(s int) unrounded {
-	return r>>s | r&1 | bool2[unrounded](r&((1<<s)-1) != 0)
+func (u unrounded) rsh(s int) unrounded {
+	return u>>s | u&1 | bool2[unrounded](u&((1<<s)-1) != 0)
 }
 
 // log10Pow2(x) returns ⌊log₁₀ 2**x⌋ = ⌊x * log₁₀ 2⌋.
@@ -84,12 +87,14 @@ func log2Pow10(x int) int {
 	return (x * 108853) >> 15
 }
 
+// uint64pow10[x] is 10**x.
 var uint64pow10 = [...]uint64{
 	1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9,
 	1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
 }
 
-// FixedWidth returns the n-digit decimal form of f as d * 10^p.
+// FixedWidth returns the n-digit decimal form of f as d * 10**p.
+// n can be at most 18.
 func FixedWidth(f float64, n int) (d uint64, p int) {
 	if n > 18 {
 		panic("too many digits")
@@ -228,7 +233,6 @@ func Short(f float64) (d uint64, p int) {
 
 // skewed computes the skewed footprint of m * 2**e,
 // which is ⌊log₁₀ 3/4 * 2**e⌋ = ⌊e*(log₁₀ 2)-(log₁₀ 4/3)⌋.
-// It is valid for e ∈ [-2985, 2936].
 func skewed(e int) int {
 	return (e*631305 - 261663) >> 21
 }
@@ -279,25 +283,22 @@ type pmHiLo struct {
 	lo uint64
 }
 
-// A scalers...
-type scalers struct {
+// A scaler holds derived scaling constants for a given e, p pair.
+type scaler struct {
 	pm pmHiLo
 	s  int
 }
 
-// prescale
-func prescale(e, p, lp int) scalers {
-	if p < pow10Min || p > pow10Max {
-		println("PRE", p)
-		panic("prescale")
-	}
-	return scalers{pm: pow10Tab[p-pow10Min], s: -(e + lp + 3)}
+// prescale returns the scaling constants for e, p.
+// lp must be log2Pow10(p).
+func prescale(e, p, lp int) scaler {
+	return scaler{pm: pow10Tab[p-pow10Min], s: -(e + lp + 3)}
 }
 
 // uscale returns unroundedOf(x * 2**e * 10**p).
-// The caller should pass c = prescale(e, p)
-// and must have left-justified x so its high bit is set.
-func uscale(x uint64, c scalers) unrounded {
+// The caller should pass c = prescale(e, p, log2Pow10(p))
+// and should have left-justified x so its high bit is set.
+func uscale(x uint64, c scaler) unrounded {
 	hi, mid := bits.Mul64(x, c.pm.hi)
 	sticky := uint64(1)
 	if hi&(1<<(c.s&63)-1) == 0 {
@@ -349,6 +350,7 @@ func Digits(d uint64) int {
 	return nd + bool2[int](d >= uint64pow10[nd])
 }
 
+// AppendFloat appends the formatting of f to dst.
 func AppendFloat(dst []byte, f float64, fmt byte, prec, bitSize int) []byte {
 	var buf [24]byte
 	var d uint64
@@ -363,8 +365,6 @@ func AppendFloat(dst []byte, f float64, fmt byte, prec, bitSize int) []byte {
 	i := Fmt(buf[:], d, p, nd)
 	return append(dst, buf[:i]...)
 }
-
-const host64bit = bits.UintSize == 64
 
 // i2a is the formatting of 00..99 concatenated,
 // a lookup table for formatting [0, 99].

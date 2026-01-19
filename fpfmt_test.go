@@ -30,6 +30,7 @@ import (
 	"rsc.io/fpfmt/bench/go125"
 	"rsc.io/fpfmt/bench/libc"
 	"rsc.io/fpfmt/bench/ryu"
+	"rsc.io/fpfmt/bench/schubfach"
 	"rsc.io/fpfmt/bench/uscalec"
 )
 
@@ -86,12 +87,13 @@ var shorts = []shortFn{
 	{"go125", go125.BenchShort},
 	{"go125unopt", go125.BenchShortUnopt},
 	{"ryu", ryu.BenchShort},
+	{"schubfach", schubfach.BenchShort},
 }
 
 var shortRaws = []shortRawFn{
 	{"uscale", shortRawLoop},
 	{"uscalec", uscalec.BenchShortRaw},
-	// {"schubfach", schubfach.BenchShortRaw},
+	{"schubfach", schubfach.BenchShortRaw},
 	{"dragonbox", dragonbox.BenchShortRaw},
 	{"ryu", ryu.BenchShortRaw},
 }
@@ -238,7 +240,7 @@ func TestShort(t *testing.T) {
 				impl.fn(have[:], 1, floats[:])
 				have := have[:bytes.IndexByte(have[:], 0)]
 				if string(have) != want {
-					t.Fatalf("short(%#x) = %s want %s", f, have, want)
+					t.Errorf("short(%#x) = %s want %s", f, have, want)
 					if fail++; fail >= 100 {
 						t.Fatalf("too many failures")
 					}
@@ -266,7 +268,11 @@ func TestShortRaw(t *testing.T) {
 				impl.fn(&d, &p, 1, floats[:])
 				have := have[:Fmt(have[:], d, int(p), Digits(d))]
 				if string(have) != want {
-					t.Fatalf("shortRaw(%#x) = %s want %s", f, have, want)
+					if impl.name == "schubfach" && len(want) > 1 && want[1] == 'e' {
+						// Schubfach always prints 2 digits.
+						continue
+					}
+					t.Errorf("shortRaw(%#x) = %s want %s", f, have, want)
 					if fail++; fail >= 100 {
 						t.Fatalf("too many failures")
 					}
@@ -453,6 +459,7 @@ var scatterReps = map[string]int{
 	"libc":       1,
 	"fast_float": 1,
 	"abseil":     1,
+	"schubfach":  1,
 }
 
 type scatterplot struct {
@@ -1752,4 +1759,24 @@ func TestPow10(t *testing.T) {
 			t.Errorf("pow10(%d) = %#x, %d, want %#x, %d", tt.p, pm, pe, tt.pm, tt.pe)
 		}
 	}
+
+	for p := pow10Min; p <= pow10Max; p++ {
+		pe := -(127 + math.Ceil((math.Ln10/math.Ln2)*float64(-p)))
+		num := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(max(0, -pe))), nil)
+		num = num.Mul(num, new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(max(0, p))), nil))
+		den := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(max(0, pe))), nil)
+		den = den.Mul(den, new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(max(0, -p))), nil))
+		want, r := new(big.Int).QuoRem(num, den, new(big.Int))
+		if r.Sign() > 0 {
+			want = want.Add(want, big.NewInt(1))
+		}
+		c := prescale(0, p, log2Pow10(p))
+		have := new(big.Int).SetUint64(c.pm.hi)
+		have = have.Lsh(have, 64)
+		have = have.Sub(have, new(big.Int).SetUint64(c.pm.lo))
+		if have.Cmp(want) != 0 {
+			t.Errorf("pow10(%d) = %#x, want %#x", p, have, want)
+		}
+	}
+
 }

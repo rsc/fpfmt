@@ -30,6 +30,7 @@ import (
 	"rsc.io/fpfmt/bench/go125"
 	"rsc.io/fpfmt/bench/libc"
 	"rsc.io/fpfmt/bench/ryu"
+	"rsc.io/fpfmt/bench/schubfach"
 	"rsc.io/fpfmt/bench/uscalec"
 )
 
@@ -86,12 +87,13 @@ var shorts = []shortFn{
 	{"go125", go125.BenchShort},
 	{"go125unopt", go125.BenchShortUnopt},
 	{"ryu", ryu.BenchShort},
+	{"schubfach", schubfach.BenchShort},
 }
 
 var shortRaws = []shortRawFn{
 	{"uscale", shortRawLoop},
 	{"uscalec", uscalec.BenchShortRaw},
-	// {"schubfach", schubfach.BenchShortRaw},
+	{"schubfach", schubfach.BenchShortRaw},
 	{"dragonbox", dragonbox.BenchShortRaw},
 	{"ryu", ryu.BenchShortRaw},
 }
@@ -120,7 +122,7 @@ func fixedLoop(dst []byte, count int, fs []float64, digits int) {
 	for range count {
 		for _, f := range fs {
 			d, p := FixedWidth(f, digits)
-			efmt(dst, d, p, digits)
+			Fmt(dst, d, p, digits)
 		}
 	}
 }
@@ -129,7 +131,7 @@ func shortLoop(dst []byte, count int, fs []float64) {
 	for range count {
 		for _, f := range fs {
 			d, p := Short(f)
-			efmt(dst, d, p, countDigits(d))
+			Fmt(dst, d, p, Digits(d))
 		}
 	}
 }
@@ -151,7 +153,8 @@ func parseLoop(count int, text []byte) float64 {
 		start := 0
 		for i, c := range text {
 			if c == '\x00' || c == '\n' {
-				total += parseText(text[start:i])
+				f, _ := ParseText(text[start:i])
+				total += f
 				if c == '\x00' {
 					break
 				}
@@ -190,7 +193,7 @@ func TestFixedWidth(t *testing.T) {
 					continue
 				}
 				floats[0] = tt.f
-				want := want[:efmt(want[:], tt.d, tt.p, tt.n)]
+				want := want[:Fmt(want[:], tt.d, tt.p, tt.n)]
 				if impl.name == "dblconv" {
 					if w, ok := roundHalfUp[string(want)]; ok {
 						want = []byte(w)
@@ -237,7 +240,7 @@ func TestShort(t *testing.T) {
 				impl.fn(have[:], 1, floats[:])
 				have := have[:bytes.IndexByte(have[:], 0)]
 				if string(have) != want {
-					t.Fatalf("short(%#x) = %s want %s", f, have, want)
+					t.Errorf("short(%#x) = %s want %s", f, have, want)
 					if fail++; fail >= 100 {
 						t.Fatalf("too many failures")
 					}
@@ -263,9 +266,13 @@ func TestShortRaw(t *testing.T) {
 				want := strconv.FormatFloat(f, 'e', -1, 64)
 				clear(have[:])
 				impl.fn(&d, &p, 1, floats[:])
-				have := have[:efmt(have[:], d, int(p), countDigits(d))]
+				have := have[:Fmt(have[:], d, int(p), Digits(d))]
 				if string(have) != want {
-					t.Fatalf("shortRaw(%#x) = %s want %s", f, have, want)
+					if impl.name == "schubfach" && len(want) > 1 && want[1] == 'e' {
+						// Schubfach always prints 2 digits.
+						continue
+					}
+					t.Errorf("shortRaw(%#x) = %s want %s", f, have, want)
 					if fail++; fail >= 100 {
 						t.Fatalf("too many failures")
 					}
@@ -404,10 +411,12 @@ func randParses() []byte {
 }
 
 func randParseRaws() []int64 {
+	var seed [32]byte
+	r := rand.New(rand.NewChaCha8(seed))
 	var raws []int64
 	for range 10000 {
-		n := rand.N(uint64(1e19))
-		p := rand.N(int64(600)) - 300
+		n := r.Uint64N(1e19)
+		p := r.Int64N(600) - 300
 		raws = append(raws, int64(n), p-18)
 	}
 	return raws
@@ -440,17 +449,17 @@ func BenchmarkParseRaw(b *testing.B) {
 var scatterFlag = flag.String("scatter", "", "write scatterplot data to `file`")
 
 var scatterReps = map[string]int{
-	"uscale":     10,
-	"uscalec":    10,
-	"uscalet":    10,
+	"uscale":     1,
+	"uscalec":    1,
 	"dmg1997":    1,
-	"dmg2017":    10,
-	"dblconv":    10,
-	"dragonbox":  10,
-	"ryu":        10,
+	"dmg2017":    1,
+	"dblconv":    1,
+	"dragonbox":  1,
+	"ryu":        1,
 	"libc":       1,
-	"fast_float": 10,
-	"abseil":     10,
+	"fast_float": 1,
+	"abseil":     1,
+	"schubfach":  1,
 }
 
 type scatterplot struct {
@@ -463,7 +472,7 @@ type scatterplot struct {
 	batch []float64
 }
 
-const TimeBatch = 10
+const TimeBatch = 25
 
 func newScatter(t *testing.T, scat, name string) *scatterplot {
 	if *scatterFlag == "" {
@@ -533,7 +542,7 @@ func TestScatterFixed(t *testing.T) {
 	var dst [1000]byte
 	for _, scat := range scatters {
 		t.Run("scatter="+scat, func(t *testing.T) {
-			for _, digits := range []int{2, 4, 8, 16, 17, 18} {
+			for _, digits := range []int{6, 17} { // 2, 4, 8, 16, 17, 18
 				t.Run(fmt.Sprintf("digits=%d", digits), func(t *testing.T) {
 					p := newScatter(t, scat, fmt.Sprintf("fixed%d", digits))
 					for _, impl := range fixeds {
@@ -1752,7 +1761,6 @@ func TestPow10(t *testing.T) {
 		if r.Sign() > 0 {
 			want = want.Add(want, big.NewInt(1))
 		}
-
 		c := prescale(0, p, log2Pow10(p))
 		have := new(big.Int).SetUint64(c.pm.hi)
 		have = have.Lsh(have, 64)

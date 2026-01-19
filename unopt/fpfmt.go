@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"math"
 	"math/bits"
-	"math/big"
 )
 
+// bool2 converts b to an integer: 1 for true, 0 for false.
 func bool2[T ~int | ~uint64](b bool) T {
 	if b {
 		return 1
@@ -24,15 +24,16 @@ func bool2[T ~int | ~uint64](b bool) T {
 // The caller is expected to have handled 0, NaN, and ±Inf already.
 // To unpack a float32 f, use unpack64(float64(f)).
 func unpack64(f float64) (uint64, int) {
-	const minExp = -1085
+	const shift = 64 - 53
+	const minExp = -(1074 + shift)
 	b := math.Float64bits(f)
-	m := 1<<63 | (b&(1<<52-1))<<(63-52)
-	e := int((b >> 52) & (1<<(63-52) - 1))
+	m := 1<<63 | (b&(1<<52-1))<<shift
+	e := int((b >> 52) & (1<<shift - 1))
 	if e == 0 {
 		m &^= 1 << 63
 		e = minExp
 		s := 64 - bits.Len64(m)
-		return m<<s, e-s
+		return m << s, e - s
 	}
 	return m, (e - 1) + minExp
 }
@@ -44,39 +45,34 @@ func pack64(m uint64, e int) float64 {
 	if m&(1<<52) == 0 {
 		return math.Float64frombits(m)
 	}
-	return math.Float64frombits((m &^ (1 << 52)) | uint64(1075+e)<<52)
+	return math.Float64frombits(m&^(1<<52) | uint64(1075+e)<<52)
 }
 
+// An unrounded represents an unrounded value.
 type unrounded uint64
 
 func unround(x float64) unrounded {
 	return unrounded(math.Floor(4*x)) | bool2[unrounded](math.Floor(4*x) != 4*x)
 }
 
-func unroundRat(r *big.Rat) unrounded {
-	r = new(big.Rat).Mul(r, big.NewRat(4, 1))
-	return unrounded(new(big.Int).Div(r.Num(), r.Denom()).Uint64()) | bool2[unrounded](!r.IsInt())
-}
-
-
 func (u unrounded) String() string {
 	return fmt.Sprintf("⟨%d.%d%s⟩", u>>2, 5*((u>>1)&1), "+"[1-u&1:])
 }
 
-func (r unrounded) floor() uint64         { return uint64((r + 0) >> 2) }
-func (r unrounded) roundHalfDown() uint64 { return uint64((r + 1) >> 2) }
-func (r unrounded) round() uint64         { return uint64((r + 1 + (r>>2)&1) >> 2) }
-func (r unrounded) roundHalfUp() uint64   { return uint64((r + 2) >> 2) }
-func (r unrounded) ceil() uint64          { return uint64((r + 3) >> 2) }
-func (r unrounded) nudge(δ int) unrounded { return r + unrounded(δ) }
+func (u unrounded) floor() uint64         { return uint64((u + 0) >> 2) }
+func (u unrounded) roundHalfDown() uint64 { return uint64((u + 1) >> 2) }
+func (u unrounded) round() uint64         { return uint64((u + 1 + (u>>2)&1) >> 2) }
+func (u unrounded) roundHalfUp() uint64   { return uint64((u + 2) >> 2) }
+func (u unrounded) ceil() uint64          { return uint64((u + 3) >> 2) }
+func (u unrounded) nudge(δ int) unrounded { return u + unrounded(δ) }
 
-func (r unrounded) div(d uint64) unrounded {
-	u := uint64(r)
-	return unrounded(u/d) | r&1 | bool2[unrounded](u%d != 0)
+func (u unrounded) div(d uint64) unrounded {
+	x := uint64(u)
+	return unrounded(x/d) | u&1 | bool2[unrounded](x%d != 0)
 }
 
-func (r unrounded) rsh(s int) unrounded {
-	return r>>s | r&1 | bool2[unrounded](r&((1<<s)-1) != 0)
+func (u unrounded) rsh(s int) unrounded {
+	return u>>s | u&1 | bool2[unrounded](u&((1<<s)-1) != 0)
 }
 
 // log10Pow2(x) returns ⌊log₁₀ 2**x⌋ = ⌊x * log₁₀ 2⌋.
@@ -96,7 +92,8 @@ var uint64pow10 = [...]uint64{
 	1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
 }
 
-// FixedWidth returns the n-digit decimal form of f as d * 10^p.
+// FixedWidth returns the n-digit decimal form of f as d * 10**p.
+// n can be at most 18.
 func FixedWidth(f float64, n int) (d uint64, p int) {
 	if n > 18 {
 		panic("too many digits")
@@ -127,24 +124,42 @@ func Parse(d uint64, p int) float64 {
 	return pack64(m, -e)
 }
 
-func parseText(s []byte) float64 {
-	d := uint64(0)
-	dp := 0
+// ParseText parses a decimal string s
+// and returns the nearest floating point value.
+// It returns 0, false if the input s is malformed.
+func ParseText(s []byte) (f float64, ok bool) {
+	isDigit := func(c byte) bool { return c-'0' <= 9 }
+
+	// Read digits.
+	const maxDigits = 19
+	d := uint64(0) // decimal value of digits
+	frac := 0      // count of digits after decimal point
 	i := 0
-	for ; i < len(s) && s[i] != 'e'; i++ {
-		if s[i] == '.' {
-			dp = i + 1
-			continue
-		}
+	for ; i < len(s) && isDigit(s[i]); i++ {
 		d = d*10 + uint64(s[i]) - '0'
 	}
-	if dp > 0 {
-		dp = i - dp
+	if i > maxDigits {
+		return // too many digits
 	}
-	p := 0
-	if i < len(s) {
-		sign := +1
+	if i < len(s) && s[i] == '.' {
 		i++
+		for ; i < len(s) && isDigit(s[i]); i++ {
+			d = d*10 + uint64(s[i]) - '0'
+			frac++
+		}
+		if i == 1 || i > maxDigits+1 {
+			return // no digits or too many digits
+		}
+	}
+	if i == 0 {
+		return // no digits
+	}
+
+	// Read exponent.
+	p := 0
+	if i < len(s) && (s[i] == 'e' || s[i] == 'E') {
+		i++
+		sign := +1
 		if i < len(s) {
 			if s[i] == '-' {
 				sign = -1
@@ -153,15 +168,18 @@ func parseText(s []byte) float64 {
 				i++
 			}
 		}
-		for ; i < len(s); i++ {
+		if i >= len(s) || len(s)-i > 3 {
+			return // missing or too large exponent
+		}
+		for ; i < len(s) && isDigit(s[i]); i++ {
 			p = p*10 + int(s[i]) - '0'
 		}
 		p *= sign
 	}
-	if d > 1e19 {
-		println("PARSE", s, d)
+	if i != len(s) {
+		return // junk on end
 	}
-	return Parse(d, p-dp)
+	return Parse(d, p-frac), true
 }
 
 // Short computes the shortest formatting of f,
@@ -239,7 +257,7 @@ func trimZeros(x uint64, p int) (uint64, int) {
 // A scalers...
 type scalers struct {
 	pm pmHiLo
-	s    int
+	s  int
 }
 
 // A pmHiLo represents hi<<64 + lo.
@@ -293,7 +311,7 @@ func uscale(x uint64, c scalers) unrounded {
 	return unrounded(hi>>c.s) | sticky
 }
 
-func efmt(dst []byte, dm uint64, dp int, nd int) int {
+func Fmt(dst []byte, dm uint64, dp int, nd int) int {
 	formatBase10(dst[1:nd+1], dm)
 	dp += nd - 1
 	dst[0] = dst[1]
@@ -310,41 +328,40 @@ func efmt(dst []byte, dm uint64, dp int, nd int) int {
 		dst[n+1] = '+'
 	}
 	if dp < 100 {
-		dst[n+2] = smalls[dp*2]
-		dst[n+3] = smalls[dp*2+1]
+		dst[n+2] = i2a[dp*2]
+		dst[n+3] = i2a[dp*2+1]
 		return n + 4
 	}
 	dst[n+2] = byte('0' + dp/100)
-	dst[n+3] = smalls[(dp%100)*2]
-	dst[n+4] = smalls[(dp%100)*2+1]
+	dst[n+3] = i2a[(dp%100)*2]
+	dst[n+4] = i2a[(dp%100)*2+1]
 	return n + 5
 }
 
-func countDigits(d uint64) int {
+func Digits(d uint64) int {
 	nd := log10Pow2(bits.Len64(d))
 	return nd + bool2[int](d >= uint64pow10[nd])
 }
 
+// AppendFloat appends the formatting of f to dst.
 func AppendFloat(dst []byte, f float64, fmt byte, prec, bitSize int) []byte {
 	var buf [24]byte
 	var d uint64
 	var p, nd int
 	if prec < 0 {
 		d, p = Short(f)
-		nd = countDigits(d)
+		nd = Digits(d)
 	} else {
 		d, p = FixedWidth(f, prec)
 		nd = prec
 	}
-	i := efmt(buf[:], d, p, nd)
+	i := Fmt(buf[:], d, p, nd)
 	return append(dst, buf[:i]...)
 }
 
-const host64bit = bits.UintSize == 64
-
-// smalls is the formatting of 00..99 concatenated,
+// i2a is the formatting of 00..99 concatenated,
 // a lookup table for formatting [0, 99].
-const smalls = "00010203040506070809" +
+const i2a = "00010203040506070809" +
 	"10111213141516171819" +
 	"20212223242526272829" +
 	"30313233343536373839" +
@@ -359,7 +376,7 @@ const smalls = "00010203040506070809" +
 // The caller is responsible for ensuring that a is big enough to hold u.
 // If a is too big, leading zeros will be filled in as needed.
 func formatBase10(a []byte, u uint64) {
-	for nd := len(a)-1; nd >= 0; nd-- {
+	for nd := len(a) - 1; nd >= 0; nd-- {
 		a[nd] = byte(u%10 + '0')
 		u /= 10
 	}
