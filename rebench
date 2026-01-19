@@ -10,3 +10,4 @@ ssh s7 'cd /tmp/fpfmt.rebench/fpfmt && ./fpfmt.test -test.run=Scatter/rand -scat
 ./fpfmt.test -test.run=Scatter/rand -scatter=darwin-m4.out $* >[2=1] | cat > rebench.local &
 wait
 scp s7:/tmp/fpfmt.rebench/fpfmt/linux-ryzen.out .
+rm -f fpfmt.test rebench.local rebench.s7
