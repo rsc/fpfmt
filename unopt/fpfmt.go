@@ -220,7 +220,6 @@ func Short(f float64) (d uint64, p int) {
 
 // skewed computes the skewed footprint of m * 2**e,
 // which is ⌊log₁₀ 3/4 * 2**e⌋ = ⌊e*(log₁₀ 2)-(log₁₀ 4/3)⌋.
-// It is valid for e ∈ [-2985, 2936].
 func skewed(e int) int {
 	return (e*631305 - 261663) >> 21
 }
@@ -254,8 +253,8 @@ func trimZeros(x uint64, p int) (uint64, int) {
 	return x, p
 }
 
-// A scalers...
-type scalers struct {
+// A scaler holds derived scaling constants for a given e, p pair.
+type scaler struct {
 	pm pmHiLo
 	s  int
 }
@@ -266,19 +265,20 @@ type pmHiLo struct {
 	lo uint64
 }
 
-// prescale
-func prescale(e, p, lp int) scalers {
+// prescale returns the scaling constants for e, p.
+// lp must be log2Pow10(p).
+func prescale(e, p, lp int) scaler {
 	if p < pow10Min || p > pow10Max {
 		panic("prescale")
 	}
-	return scalers{pm: pow10Tab[p-pow10Min], s: -(e + lp + 3)}
+	return scaler{pm: pow10Tab[p-pow10Min], s: -(e + lp + 3)}
 }
 
 /*
 // uscale0 returns unround(x * 2**e * 10**p).
 // The caller should pass c = prescale(e, p)
 // and must have left-justified x so its high bit is set.
-func uscale0(x uint64, c scalers) unrounded {
+func uscale0(x uint64, c scaler) unrounded {
 	b := func() *big.Int { return new(big.Int) }
 	bn := func(x uint64) *big.Int { return b().SetUint64(x) }
 	mul := func(factors ...*big.Int) *big.Int {
@@ -300,9 +300,9 @@ func uscale0(x uint64, c scalers) unrounded {
 */
 
 // uscale returns unround(x * 2**e * 10**p).
-// The caller must pass c = prescale(e, p)
-// and must left-justify x so its high bit is set.
-func uscale(x uint64, c scalers) unrounded {
+// The caller should pass c = prescale(e, p, log2Pow10(p))
+// and should have left-justified x so its high bit is set.
+func uscale(x uint64, c scaler) unrounded {
 	hi, mid := bits.Mul64(x, c.pm.hi)
 	mid2, _ := bits.Mul64(x, c.pm.lo)
 	mid, carry := bits.Add64(mid, mid2, 0)
@@ -311,52 +311,45 @@ func uscale(x uint64, c scalers) unrounded {
 	return unrounded(hi>>c.s) | sticky
 }
 
-func Fmt(dst []byte, dm uint64, dp int, nd int) int {
-	formatBase10(dst[1:nd+1], dm)
-	dp += nd - 1
-	dst[0] = dst[1]
+// Fmt formats d, p into s in exponential notation.
+// The caller must pass nd set to the number of digits in d.
+// It returns the number of bytes written to s.
+func Fmt(s []byte, d uint64, p, nd int) int {
+	// Put digits into s, leaving room for decimal point.
+	formatBase10(s[1:nd+1], d)
+	p += nd - 1
+
+	// Move first digit up and insert decimal point.
+	s[0] = s[1]
 	n := nd
 	if n > 1 {
-		dst[1] = '.'
+		s[1] = '.'
 		n++
 	}
-	dst[n] = 'e'
-	if dp < 0 {
-		dst[n+1] = '-'
-		dp = -dp
+
+	// Add 2- or 3-digit exponent.
+	s[n] = 'e'
+	if p < 0 {
+		s[n+1] = '-'
+		p = -p
 	} else {
-		dst[n+1] = '+'
+		s[n+1] = '+'
 	}
-	if dp < 100 {
-		dst[n+2] = i2a[dp*2]
-		dst[n+3] = i2a[dp*2+1]
+	if p < 100 {
+		s[n+2] = i2a[p*2]
+		s[n+3] = i2a[p*2+1]
 		return n + 4
 	}
-	dst[n+2] = byte('0' + dp/100)
-	dst[n+3] = i2a[(dp%100)*2]
-	dst[n+4] = i2a[(dp%100)*2+1]
+	s[n+2] = byte('0' + p/100)
+	s[n+3] = i2a[(p%100)*2]
+	s[n+4] = i2a[(p%100)*2+1]
 	return n + 5
 }
 
+// Digits returns the number of decimal digits in d.
 func Digits(d uint64) int {
 	nd := log10Pow2(bits.Len64(d))
 	return nd + bool2[int](d >= uint64pow10[nd])
-}
-
-// AppendFloat appends the formatting of f to dst.
-func AppendFloat(dst []byte, f float64, fmt byte, prec, bitSize int) []byte {
-	var buf [24]byte
-	var d uint64
-	var p, nd int
-	if prec < 0 {
-		d, p = Short(f)
-		nd = Digits(d)
-	} else {
-		d, p = FixedWidth(f, prec)
-		nd = prec
-	}
-	i := Fmt(buf[:], d, p, nd)
-	return append(dst, buf[:i]...)
 }
 
 // i2a is the formatting of 00..99 concatenated,

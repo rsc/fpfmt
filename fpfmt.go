@@ -295,7 +295,7 @@ func prescale(e, p, lp int) scaler {
 	return scaler{pm: pow10Tab[p-pow10Min], s: -(e + lp + 3)}
 }
 
-// uscale returns unroundedOf(x * 2**e * 10**p).
+// uscale returns unround(x * 2**e * 10**p).
 // The caller should pass c = prescale(e, p, log2Pow10(p))
 // and should have left-justified x so its high bit is set.
 func uscale(x uint64, c scaler) unrounded {
@@ -348,22 +348,6 @@ func Fmt(s []byte, d uint64, p, nd int) int {
 func Digits(d uint64) int {
 	nd := log10Pow2(bits.Len64(d))
 	return nd + bool2[int](d >= uint64pow10[nd])
-}
-
-// AppendFloat appends the formatting of f to dst.
-func AppendFloat(dst []byte, f float64, fmt byte, prec, bitSize int) []byte {
-	var buf [24]byte
-	var d uint64
-	var p, nd int
-	if prec < 0 {
-		d, p = Short(f)
-		nd = Digits(d)
-	} else {
-		d, p = FixedWidth(f, prec)
-		nd = prec
-	}
-	i := Fmt(buf[:], d, p, nd)
-	return append(dst, buf[:i]...)
 }
 
 // i2a is the formatting of 00..99 concatenated,
