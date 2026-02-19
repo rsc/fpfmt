@@ -32,6 +32,7 @@ import (
 	"rsc.io/fpfmt/bench/ryu"
 	"rsc.io/fpfmt/bench/schubfach"
 	"rsc.io/fpfmt/bench/uscalec"
+	"rsc.io/fpfmt/bench/xjb"
 )
 
 type fixedFn struct {
@@ -88,6 +89,7 @@ var shorts = []shortFn{
 	{"go125unopt", go125.BenchShortUnopt},
 	{"ryu", ryu.BenchShort},
 	{"schubfach", schubfach.BenchShort},
+	{"xjb", xjb.BenchShort},
 }
 
 var shortRaws = []shortRawFn{
@@ -1778,5 +1780,10 @@ func TestPow10(t *testing.T) {
 			t.Errorf("pow10(%d) = %#x, want %#x", p, have, want)
 		}
 	}
+}
 
+func TestOne(t *testing.T) {
+	// dst := make([]byte, 100)
+	// xjb.BenchShort(dst, 1, []float64{math.Nextafter(1.234e234, 100)})
+	// fmt.Printf("%s\n", dst[:bytes.IndexByte(dst, 0)])
 }
